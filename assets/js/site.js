@@ -473,6 +473,19 @@ function setupFadeInObserver() {
 // - keep camera motion driven only by scroll and pointer state
 // - keep the animation loop as a thin orchestrator
 
+const CAMERA_LIMITS = {
+  startY: 3.6,
+  minY: 0.85,
+  startZ: 15.5,
+  minZ: 11.8,
+  lookAtYFloor: -0.35
+};
+
+const CAMERA_EASING = {
+  scroll: 0.06,
+  lookTarget: 0.025
+};
+
 function createSceneRenderer(canvas) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -485,7 +498,7 @@ function createSceneRenderer(canvas) {
 
 function createSceneCamera() {
   const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 200);
-  camera.position.set(0, 2, 14);
+  camera.position.set(0, CAMERA_LIMITS.startY, CAMERA_LIMITS.startZ);
   camera.lookAt(0, 0, 0);
 
   return camera;
@@ -711,11 +724,26 @@ function createVaultPanels(scene) {
 }
 
 function updateCameraFromScroll(camera, state) {
-  const scrollFactor = state.scrollY * 0.002;
-  camera.position.x = state.targetX * 1.8;
-  camera.position.y = 2 - state.targetY * 0.8 - scrollFactor * 0.5;
-  camera.position.z = 14 - scrollFactor * 0.3;
-  camera.lookAt(state.targetX * 0.3, -scrollFactor * 0.1, 0);
+  const scrollRange = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
+  const scrollProgress = THREE.MathUtils.clamp(state.scrollY / scrollRange, 0, 1);
+
+  state.cameraProgress += (scrollProgress - state.cameraProgress) * CAMERA_EASING.scroll;
+
+  const progress = state.cameraProgress;
+  const targetX = state.targetX * 1.8;
+  const targetY = THREE.MathUtils.lerp(CAMERA_LIMITS.startY, CAMERA_LIMITS.minY, progress);
+  const targetZ = THREE.MathUtils.lerp(CAMERA_LIMITS.startZ, CAMERA_LIMITS.minZ, progress);
+  const targetLookAtX = state.targetX * 0.28;
+  const targetLookAtY = THREE.MathUtils.lerp(0, CAMERA_LIMITS.lookAtYFloor, progress);
+
+  camera.position.x += (targetX - camera.position.x) * 0.08;
+  camera.position.y = THREE.MathUtils.clamp(targetY + state.targetY * 0.1, CAMERA_LIMITS.minY, CAMERA_LIMITS.startY);
+  camera.position.z += (targetZ - camera.position.z) * 0.08;
+
+  state.lookAtX += (targetLookAtX - state.lookAtX) * CAMERA_EASING.lookTarget;
+  state.lookAtY += (targetLookAtY - state.lookAtY) * CAMERA_EASING.lookTarget;
+
+  camera.lookAt(state.lookAtX, state.lookAtY, 0);
 }
 
 function updateSceneAnimation(state, runtime) {
@@ -771,6 +799,9 @@ function setupScene() {
     mouseY: 0,
     targetX: 0,
     targetY: 0,
+    lookAtX: 0,
+    lookAtY: 0,
+    cameraProgress: 0,
     scrollY: 0,
     time: 0
   };
