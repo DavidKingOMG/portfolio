@@ -467,25 +467,32 @@ function setupFadeInObserver() {
   fadeEls.forEach((element) => observer.observe(element));
 }
 
-function setupScene() {
-  const canvas = document.getElementById('vault-canvas');
+// Scene structure checklist:
+// - keep environment setup isolated from animated objects
+// - keep pillars, core, rings, capsules, particles, and panels independent
+// - keep camera motion driven only by scroll and pointer state
+// - keep the animation loop as a thin orchestrator
 
-  if (!(canvas instanceof HTMLCanvasElement)) {
-    return;
-  }
-
+function createSceneRenderer(canvas) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.1;
 
-  const scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0x04060f, 0.035);
+  return renderer;
+}
 
+function createSceneCamera() {
   const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 200);
   camera.position.set(0, 2, 14);
   camera.lookAt(0, 0, 0);
+
+  return camera;
+}
+
+function createSceneEnvironment(scene) {
+  scene.fog = new THREE.FogExp2(0x04060f, 0.035);
 
   const ambientLight = new THREE.AmbientLight(0x0a1020, 1.0);
   scene.add(ambientLight);
@@ -524,6 +531,10 @@ function setupScene() {
   gridHelper.material.transparent = true;
   scene.add(gridHelper);
 
+  return { cyanLight };
+}
+
+function createVaultPillars(scene) {
   const pillarMat = new THREE.MeshStandardMaterial({
     color: 0x080e1e,
     metalness: 0.9,
@@ -548,8 +559,11 @@ function setupScene() {
     strip.position.set(x + 0.25, y, z + 0.25);
     scene.add(strip);
   });
+}
 
+function createVaultRings(scene) {
   const rings = [];
+
   for (let index = 0; index < 3; index += 1) {
     const ringGeo = new THREE.TorusGeometry(2.5 + index * 1.2, 0.02, 8, 80);
     const ringMat = new THREE.MeshBasicMaterial({
@@ -564,6 +578,10 @@ function setupScene() {
     rings.push(ring);
   }
 
+  return rings;
+}
+
+function createVaultParticles(scene) {
   const particlesGeo = new THREE.BufferGeometry();
   const particleCount = 2200;
   const positions = new Float32Array(particleCount * 3);
@@ -605,6 +623,10 @@ function setupScene() {
   const particles = new THREE.Points(particlesGeo, particlesMat);
   scene.add(particles);
 
+  return particles;
+}
+
+function createVaultCapsules(scene) {
   const capsules = [];
   const capsuleData = [
     { x: -5, z: -3 }, { x: 0, z: -4 }, { x: 5, z: -3 },
@@ -638,6 +660,10 @@ function setupScene() {
     capsules.push(group);
   });
 
+  return capsules;
+}
+
+function createEnergyCore(scene) {
   const coreGeo = new THREE.OctahedronGeometry(0.9, 2);
   const coreMat = new THREE.MeshStandardMaterial({
     color: 0x001428,
@@ -656,6 +682,10 @@ function setupScene() {
   coreEdge.position.copy(core.position);
   scene.add(coreEdge);
 
+  return { core, coreEdge };
+}
+
+function createVaultPanels(scene) {
   const panelMat = new THREE.MeshStandardMaterial({
     color: 0x060b18,
     metalness: 0.8,
@@ -678,57 +708,95 @@ function setupScene() {
     seam.position.set(index * 3.2, 2.5, -15.98);
     scene.add(seam);
   }
+}
 
-  let mouseX = 0;
-  let mouseY = 0;
-  let targetX = 0;
-  let targetY = 0;
-  let scrollY = 0;
-  let time = 0;
+function updateCameraFromScroll(camera, state) {
+  const scrollFactor = state.scrollY * 0.002;
+  camera.position.x = state.targetX * 1.8;
+  camera.position.y = 2 - state.targetY * 0.8 - scrollFactor * 0.5;
+  camera.position.z = 14 - scrollFactor * 0.3;
+  camera.lookAt(state.targetX * 0.3, -scrollFactor * 0.1, 0);
+}
+
+function updateSceneAnimation(state, runtime) {
+  state.time += 0.008;
+
+  state.targetX += (state.mouseX - state.targetX) * 0.04;
+  state.targetY += (state.mouseY - state.targetY) * 0.04;
+
+  updateCameraFromScroll(runtime.camera, state);
+
+  runtime.core.rotation.y += 0.008;
+  runtime.core.rotation.x += 0.004;
+  runtime.coreEdge.rotation.copy(runtime.core.rotation);
+
+  runtime.cyanLight.intensity = 2.0 + Math.sin(state.time * 2.5) * 0.8;
+  runtime.cyanLight.position.x = Math.sin(state.time * 0.5) * 5;
+  runtime.cyanLight.position.z = Math.cos(state.time * 0.5) * 3 - 3;
+
+  runtime.capsules.forEach((capsule) => {
+    capsule.position.y = capsule.userData.baseY + Math.sin(state.time + capsule.userData.phase) * 0.18;
+    capsule.rotation.y = Math.sin(state.time * 0.4 + capsule.userData.phase) * 0.12;
+  });
+
+  runtime.rings.forEach((ring, index) => {
+    ring.rotation.z += 0.002 * (index % 2 === 0 ? 1 : -1);
+    ring.rotation.x = Math.PI / 2 + Math.sin(state.time * 0.3 + index) * 0.05;
+  });
+
+  runtime.particles.rotation.y += 0.0003;
+  runtime.particles.rotation.x += 0.0001;
+}
+
+function setupScene() {
+  const canvas = document.getElementById('vault-canvas');
+
+  if (!(canvas instanceof HTMLCanvasElement)) {
+    return;
+  }
+
+  const renderer = createSceneRenderer(canvas);
+  const scene = new THREE.Scene();
+  const camera = createSceneCamera();
+  const { cyanLight } = createSceneEnvironment(scene);
+  createVaultPillars(scene);
+  const rings = createVaultRings(scene);
+  const particles = createVaultParticles(scene);
+  const capsules = createVaultCapsules(scene);
+  const { core, coreEdge } = createEnergyCore(scene);
+  createVaultPanels(scene);
+
+  const state = {
+    mouseX: 0,
+    mouseY: 0,
+    targetX: 0,
+    targetY: 0,
+    scrollY: 0,
+    time: 0
+  };
 
   document.addEventListener('mousemove', (event) => {
-    mouseX = (event.clientX / window.innerWidth - 0.5) * 2;
-    mouseY = (event.clientY / window.innerHeight - 0.5) * 2;
+    state.mouseX = (event.clientX / window.innerWidth - 0.5) * 2;
+    state.mouseY = (event.clientY / window.innerHeight - 0.5) * 2;
   });
 
   window.addEventListener('scroll', () => {
-    scrollY = window.scrollY;
+    state.scrollY = window.scrollY;
   });
+
+  const runtime = {
+    camera,
+    cyanLight,
+    core,
+    coreEdge,
+    capsules,
+    rings,
+    particles
+  };
 
   function animate() {
     requestAnimationFrame(animate);
-    time += 0.008;
-
-    targetX += (mouseX - targetX) * 0.04;
-    targetY += (mouseY - targetY) * 0.04;
-
-    const scrollFactor = scrollY * 0.002;
-    camera.position.x = targetX * 1.8;
-    camera.position.y = 2 - targetY * 0.8 - scrollFactor * 0.5;
-    camera.position.z = 14 - scrollFactor * 0.3;
-    camera.lookAt(targetX * 0.3, -scrollFactor * 0.1, 0);
-
-    core.rotation.y += 0.008;
-    core.rotation.x += 0.004;
-    coreEdge.rotation.copy(core.rotation);
-
-    cyanLight.intensity = 2.0 + Math.sin(time * 2.5) * 0.8;
-    cyanLight.position.x = Math.sin(time * 0.5) * 5;
-    cyanLight.position.z = Math.cos(time * 0.5) * 3 - 3;
-
-    capsules.forEach((capsule) => {
-      capsule.position.y = capsule.userData.baseY + Math.sin(time + capsule.userData.phase) * 0.18;
-      capsule.rotation.y = Math.sin(time * 0.4 + capsule.userData.phase) * 0.12;
-    });
-
-    rings.forEach((ring, index) => {
-      ring.rotation.z += 0.002 * (index % 2 === 0 ? 1 : -1);
-      ring.rotation.x = Math.PI / 2 + Math.sin(time * 0.3 + index) * 0.05;
-    });
-
-    particles.rotation.y += 0.0003;
-    particles.rotation.x += 0.0001;
-
+    updateSceneAnimation(state, runtime);
     renderer.render(scene, camera);
   }
 
