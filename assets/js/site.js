@@ -482,8 +482,10 @@ const CAMERA_LIMITS = {
 };
 
 const CAMERA_EASING = {
-  scroll: 0.06,
-  lookTarget: 0.025
+  scroll: 3.6,
+  lookTarget: 1.5,
+  position: 4.8,
+  pointer: 2.4
 };
 
 const PILLAR_SPEC = {
@@ -750,11 +752,31 @@ function createVaultPanels(scene) {
   }
 }
 
-function updateCameraFromScroll(camera, state) {
-  const scrollRange = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
-  const scrollProgress = THREE.MathUtils.clamp(state.scrollY / scrollRange, 0, 1);
+function easeToward(currentValue, targetValue, easingStrength, deltaSeconds) {
+  const easedStep = 1 - Math.exp(-easingStrength * deltaSeconds);
 
-  state.cameraProgress += (scrollProgress - state.cameraProgress) * CAMERA_EASING.scroll;
+  return currentValue + ((targetValue - currentValue) * easedStep);
+}
+
+function getSceneScrollProgress(state) {
+  const heroSection = document.getElementById('hero');
+  const contactSection = document.getElementById('contact');
+
+  if (!(heroSection instanceof HTMLElement) || !(contactSection instanceof HTMLElement)) {
+    return 0;
+  }
+
+  const scrollStart = heroSection.offsetTop;
+  const contactAnchor = contactSection.offsetTop + (contactSection.offsetHeight * 0.35);
+  const scrollRange = Math.max(contactAnchor - scrollStart, 1);
+
+  return THREE.MathUtils.clamp((state.scrollY - scrollStart) / scrollRange, 0, 1);
+}
+
+function updateCameraFromScroll(camera, state, deltaSeconds) {
+  const scrollProgress = getSceneScrollProgress(state);
+
+  state.cameraProgress = easeToward(state.cameraProgress, scrollProgress, CAMERA_EASING.scroll, deltaSeconds);
 
   const progress = state.cameraProgress;
   const targetX = state.targetX * 1.8;
@@ -763,23 +785,23 @@ function updateCameraFromScroll(camera, state) {
   const targetLookAtX = state.targetX * 0.28;
   const targetLookAtY = THREE.MathUtils.lerp(0, CAMERA_LIMITS.lookAtYFloor, progress);
 
-  camera.position.x += (targetX - camera.position.x) * 0.08;
+  camera.position.x = easeToward(camera.position.x, targetX, CAMERA_EASING.position, deltaSeconds);
   camera.position.y = THREE.MathUtils.clamp(targetY + state.targetY * 0.1, CAMERA_LIMITS.minY, CAMERA_LIMITS.startY);
-  camera.position.z += (targetZ - camera.position.z) * 0.08;
+  camera.position.z = easeToward(camera.position.z, targetZ, CAMERA_EASING.position, deltaSeconds);
 
-  state.lookAtX += (targetLookAtX - state.lookAtX) * CAMERA_EASING.lookTarget;
-  state.lookAtY += (targetLookAtY - state.lookAtY) * CAMERA_EASING.lookTarget;
+  state.lookAtX = easeToward(state.lookAtX, targetLookAtX, CAMERA_EASING.lookTarget, deltaSeconds);
+  state.lookAtY = easeToward(state.lookAtY, targetLookAtY, CAMERA_EASING.lookTarget, deltaSeconds);
 
   camera.lookAt(state.lookAtX, state.lookAtY, 0);
 }
 
-function updateSceneAnimation(state, runtime) {
-  state.time += 0.008;
+function updateSceneAnimation(state, runtime, deltaSeconds) {
+  state.time += deltaSeconds;
 
-  state.targetX += (state.mouseX - state.targetX) * 0.04;
-  state.targetY += (state.mouseY - state.targetY) * 0.04;
+  state.targetX = easeToward(state.targetX, state.mouseX, CAMERA_EASING.pointer, deltaSeconds);
+  state.targetY = easeToward(state.targetY, state.mouseY, CAMERA_EASING.pointer, deltaSeconds);
 
-  updateCameraFromScroll(runtime.camera, state);
+  updateCameraFromScroll(runtime.camera, state, deltaSeconds);
 
   const corePulse = 1 + Math.sin(state.time * 1.6) * 0.035;
   const corePositionAttr = runtime.coreGeometry.attributes.position;
@@ -805,7 +827,7 @@ function updateSceneAnimation(state, runtime) {
 
   corePositionAttr.needsUpdate = true;
 
-  runtime.core.rotation.y += 0.0018;
+  runtime.core.rotation.y += 0.108 * deltaSeconds;
   runtime.coreMaterial.opacity = 0.68 + Math.sin(state.time * 1.4) * 0.04;
 
   runtime.cyanLight.intensity = 2.15 + Math.sin(state.time * 1.4) * 0.18;
@@ -842,7 +864,7 @@ function setupScene() {
     lookAtX: 0,
     lookAtY: 0,
     cameraProgress: 0,
-    scrollY: 0,
+    scrollY: window.scrollY,
     time: 0
   };
 
@@ -862,13 +884,18 @@ function setupScene() {
     ...energyCore
   };
 
-  function animate() {
+  let lastFrameTime = performance.now();
+
+  function animate(frameTime) {
+    const deltaSeconds = Math.min((frameTime - lastFrameTime) / 1000, 1 / 20);
+    lastFrameTime = frameTime;
+
     requestAnimationFrame(animate);
-    updateSceneAnimation(state, runtime);
+    updateSceneAnimation(state, runtime, deltaSeconds);
     renderer.render(scene, camera);
   }
 
-  animate();
+  requestAnimationFrame(animate);
 
   window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
