@@ -3,975 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Digital Vault</title>
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  :root {
-    --cyan: #00d4ff;
-    --blue: #0066cc;
-    --silver: #c0c8d8;
-    --white: #f0f4ff;
-    --dark: #04060f;
-    --panel: rgba(8,14,32,0.82);
-    --border: rgba(0,212,255,0.18);
-    --glass: rgba(255,255,255,0.03);
-  }
-
-  html { scroll-behavior: smooth; }
-
-  body {
-    margin: 0; padding: 0; overflow-x: hidden;
-    background: #04060f;
-    font-family: 'Courier New', monospace;
-    color: var(--white);
-    cursor: crosshair;
-  }
-
-  /* Scrollbar */
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: #04060f; }
-  ::-webkit-scrollbar-thumb { background: var(--cyan); border-radius: 2px; }
-
-  /* ─── CANVAS BACKGROUND ─── */
-  #vault-canvas {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100vw; height: 100vh;
-    z-index: 0;
-    pointer-events: none;
-  }
-
-  /* ─── NAV ─── */
-  nav {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px 48px;
-    background: linear-gradient(to bottom, rgba(4,6,15,0.95) 0%, transparent 100%);
-    border-bottom: 1px solid rgba(0,212,255,0.06);
-  }
-
-  .nav-logo {
-    font-size: 11px;
-    letter-spacing: 0.35em;
-    text-transform: uppercase;
-    color: var(--cyan);
-    font-weight: 400;
-  }
-
-  .nav-logo span { color: var(--silver); opacity: 0.5; }
-
-  .nav-links {
-    display: flex;
-    gap: 40px;
-    list-style: none;
-  }
-
-  .nav-links a {
-    font-size: 10px;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    color: var(--silver);
-    text-decoration: none;
-    opacity: 0.65;
-    transition: opacity 0.3s, color 0.3s;
-    position: relative;
-  }
-
-  .nav-links a::after {
-    content: '';
-    position: absolute;
-    bottom: -4px; left: 0;
-    width: 0; height: 1px;
-    background: var(--cyan);
-    transition: width 0.3s;
-  }
-
-  .nav-links a:hover { color: var(--cyan); opacity: 1; }
-  .nav-links a:hover::after { width: 100%; }
-
-  .nav-status {
-    font-size: 9px;
-    letter-spacing: 0.25em;
-    color: var(--cyan);
-    opacity: 0.6;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .nav-status::before {
-    content: '';
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--cyan);
-    box-shadow: 0 0 8px var(--cyan);
-    animation: pulse-dot 2s infinite;
-  }
-
-  @keyframes pulse-dot {
-    0%,100% { opacity: 1; }
-    50% { opacity: 0.3; }
-  }
-
-  /* ─── SECTIONS ─── */
-  section {
-    position: relative;
-    z-index: 10;
-    min-height: 100vh;
-  }
-
-  /* ─── HERO ─── */
-  #hero {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    text-align: center;
-    padding: 100px 48px 80px;
-  }
-
-  .hero-eyebrow {
-    font-size: 9px;
-    letter-spacing: 0.5em;
-    text-transform: uppercase;
-    color: var(--cyan);
-    opacity: 0.7;
-    margin-bottom: 28px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-
-  .hero-eyebrow::before,
-  .hero-eyebrow::after {
-    content: '';
-    display: block;
-    width: 60px; height: 1px;
-    background: linear-gradient(to right, transparent, var(--cyan));
-  }
-
-  .hero-eyebrow::after {
-    background: linear-gradient(to left, transparent, var(--cyan));
-  }
-
-  .hero-name {
-    font-family: 'Segoe UI', sans-serif;
-    font-size: clamp(52px, 8vw, 110px);
-    font-weight: 200;
-    letter-spacing: -0.02em;
-    line-height: 0.95;
-    color: var(--white);
-    margin-bottom: 16px;
-  }
-
-  .hero-name strong {
-    font-weight: 700;
-    color: #fff;
-    display: block;
-  }
-
-  .hero-title {
-    font-size: 11px;
-    letter-spacing: 0.4em;
-    text-transform: uppercase;
-    color: var(--silver);
-    opacity: 0.55;
-    margin-bottom: 40px;
-  }
-
-  .hero-divider {
-    width: 1px;
-    height: 60px;
-    background: linear-gradient(to bottom, var(--cyan), transparent);
-    margin: 0 auto 40px;
-  }
-
-  .hero-intro {
-    max-width: 520px;
-    font-size: 14px;
-    line-height: 1.9;
-    color: var(--silver);
-    opacity: 0.7;
-    font-family: 'Segoe UI', sans-serif;
-    font-weight: 300;
-    margin-bottom: 56px;
-  }
-
-  .hero-cta-group {
-    display: flex;
-    gap: 20px;
-    align-items: center;
-  }
-
-  .btn-primary {
-    font-size: 10px;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    padding: 14px 36px;
-    border: 1px solid var(--cyan);
-    background: transparent;
-    color: var(--cyan);
-    cursor: pointer;
-    text-decoration: none;
-    position: relative;
-    overflow: hidden;
-    transition: color 0.3s;
-  }
-
-  .btn-primary::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: var(--cyan);
-    transform: translateX(-100%);
-    transition: transform 0.3s;
-    z-index: -1;
-  }
-
-  .btn-primary:hover { color: #04060f; }
-  .btn-primary:hover::before { transform: translateX(0); }
-
-  .btn-ghost {
-    font-size: 10px;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    color: var(--silver);
-    text-decoration: none;
-    opacity: 0.6;
-    transition: opacity 0.3s;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .btn-ghost::after {
-    content: '→';
-    transition: transform 0.3s;
-  }
-
-  .btn-ghost:hover { opacity: 1; }
-  .btn-ghost:hover::after { transform: translateX(4px); }
-
-  .scroll-indicator {
-    position: absolute;
-    bottom: 40px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    opacity: 0.4;
-    animation: float-up 2s ease-in-out infinite;
-  }
-
-  .scroll-indicator span {
-    font-size: 8px;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    color: var(--silver);
-  }
-
-  .scroll-line {
-    width: 1px;
-    height: 40px;
-    background: linear-gradient(to bottom, var(--silver), transparent);
-  }
-
-  @keyframes float-up {
-    0%,100% { transform: translateX(-50%) translateY(0); }
-    50% { transform: translateX(-50%) translateY(-6px); }
-  }
-
-  /* ─── SECTION WRAPPER ─── */
-  .section-inner {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 120px 48px;
-  }
-
-  .section-header {
-    display: flex;
-    align-items: center;
-    gap: 24px;
-    margin-bottom: 72px;
-  }
-
-  .section-tag {
-    font-size: 8px;
-    letter-spacing: 0.5em;
-    text-transform: uppercase;
-    color: var(--cyan);
-    opacity: 0.6;
-    white-space: nowrap;
-  }
-
-  .section-line {
-    flex: 1;
-    height: 1px;
-    background: linear-gradient(to right, var(--border), transparent);
-  }
-
-  .section-title {
-    font-family: 'Segoe UI', sans-serif;
-    font-size: clamp(28px, 4vw, 48px);
-    font-weight: 200;
-    letter-spacing: -0.02em;
-    color: var(--white);
-  }
-
-  .section-title strong { font-weight: 700; }
-
-  /* ─── ABOUT ─── */
-  #about { background: transparent; }
-
-  .dossier-panel {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    padding: 48px;
-    position: relative;
-    backdrop-filter: blur(20px);
-  }
-
-  .dossier-panel::before {
-    content: 'DOSSIER — CLASSIFIED';
-    position: absolute;
-    top: -1px; left: 40px;
-    font-size: 8px;
-    letter-spacing: 0.4em;
-    color: var(--cyan);
-    background: var(--dark);
-    padding: 0 12px;
-    transform: translateY(-50%);
-  }
-
-  .dossier-panel::after {
-    content: '';
-    position: absolute;
-    top: 0; right: 0;
-    width: 60px; height: 60px;
-    border-top: 1px solid var(--cyan);
-    border-right: 1px solid var(--cyan);
-    opacity: 0.4;
-  }
-
-  .dossier-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 48px;
-    align-items: start;
-  }
-
-  .dossier-bio {
-    font-family: 'Segoe UI', sans-serif;
-    font-size: 15px;
-    line-height: 1.85;
-    color: var(--silver);
-    font-weight: 300;
-    opacity: 0.85;
-  }
-
-  .dossier-bio p + p { margin-top: 20px; }
-
-  .dossier-stats {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2px;
-  }
-
-  .stat-item {
-    background: rgba(0,212,255,0.04);
-    border: 1px solid rgba(0,212,255,0.08);
-    padding: 20px 24px;
-  }
-
-  .stat-value {
-    font-size: 28px;
-    font-weight: 700;
-    color: var(--white);
-    font-family: 'Segoe UI', sans-serif;
-    letter-spacing: -0.02em;
-    margin-bottom: 4px;
-  }
-
-  .stat-label {
-    font-size: 8px;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    color: var(--silver);
-    opacity: 0.5;
-  }
-
-  /* ─── PROJECTS ─── */
-  #projects { background: transparent; }
-
-  .projects-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2px;
-  }
-
-  .project-pod {
-    background: var(--glass);
-    border: 1px solid rgba(255,255,255,0.04);
-    position: relative;
-    overflow: hidden;
-    cursor: pointer;
-    transition: border-color 0.4s, background 0.4s;
-    group: true;
-  }
-
-  .project-pod::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(to right, transparent, var(--cyan), transparent);
-    transform: scaleX(0);
-    transition: transform 0.4s;
-  }
-
-  .project-pod:hover {
-    border-color: rgba(0,212,255,0.25);
-    background: rgba(0,212,255,0.03);
-  }
-
-  .project-pod:hover::before { transform: scaleX(1); }
-
-  .pod-inner {
-    padding: 36px 32px;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .pod-index {
-    font-size: 9px;
-    letter-spacing: 0.4em;
-    color: var(--cyan);
-    opacity: 0.4;
-    margin-bottom: 24px;
-  }
-
-  .pod-title {
-    font-family: 'Segoe UI', sans-serif;
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--white);
-    margin-bottom: 12px;
-    letter-spacing: -0.01em;
-  }
-
-  .pod-desc {
-    font-size: 12px;
-    line-height: 1.8;
-    color: var(--silver);
-    opacity: 0.65;
-    font-family: 'Segoe UI', sans-serif;
-    font-weight: 300;
-    flex: 1;
-    margin-bottom: 28px;
-  }
-
-  .pod-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 28px;
-  }
-
-  .pod-tag {
-    font-size: 8px;
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-    color: var(--cyan);
-    border: 1px solid rgba(0,212,255,0.25);
-    padding: 4px 10px;
-    background: rgba(0,212,255,0.04);
-  }
-
-  .pod-link {
-    font-size: 9px;
-    letter-spacing: 0.35em;
-    text-transform: uppercase;
-    color: var(--silver);
-    text-decoration: none;
-    opacity: 0.5;
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    transition: opacity 0.3s, color 0.3s;
-  }
-
-  .pod-link::after {
-    content: '→';
-    transition: transform 0.3s;
-  }
-
-  .project-pod:hover .pod-link { opacity: 1; color: var(--cyan); }
-  .project-pod:hover .pod-link::after { transform: translateX(4px); }
-
-  .pod-classified {
-    position: absolute;
-    top: 16px; right: 16px;
-    font-size: 7px;
-    letter-spacing: 0.3em;
-    color: rgba(255,80,80,0.6);
-    border: 1px solid rgba(255,80,80,0.2);
-    padding: 3px 8px;
-  }
-
-  /* ─── SKILLS ─── */
-  #skills { background: transparent; }
-
-  .skills-map {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 2px;
-  }
-
-  .skill-category {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    padding: 32px 28px;
-    backdrop-filter: blur(10px);
-    position: relative;
-    overflow: hidden;
-  }
-
-  .skill-category::before {
-    content: '';
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    height: 1px;
-    background: linear-gradient(to right, transparent, var(--cyan), transparent);
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
-
-  .skill-category:hover::before { opacity: 1; }
-
-  .skill-cat-label {
-    font-size: 8px;
-    letter-spacing: 0.4em;
-    text-transform: uppercase;
-    color: var(--cyan);
-    opacity: 0.6;
-    margin-bottom: 28px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .skill-cat-label::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-
-  .skill-list {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .skill-item {
-    font-size: 12px;
-    color: var(--silver);
-    opacity: 0.75;
-    font-family: 'Segoe UI', sans-serif;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    transition: opacity 0.3s, color 0.3s;
-    cursor: default;
-  }
-
-  .skill-item::before {
-    content: '';
-    width: 3px; height: 3px;
-    border-radius: 50%;
-    background: var(--cyan);
-    opacity: 0.5;
-    flex-shrink: 0;
-  }
-
-  .skill-item:hover { opacity: 1; color: var(--white); }
-
-  /* ─── EXPERIENCE ─── */
-  #experience { background: transparent; }
-
-  .records-wall {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .record-entry {
-    background: var(--glass);
-    border: 1px solid rgba(255,255,255,0.04);
-    display: grid;
-    grid-template-columns: 180px 1fr auto;
-    gap: 0;
-    position: relative;
-    overflow: hidden;
-    transition: border-color 0.3s;
-  }
-
-  .record-entry:hover { border-color: var(--border); }
-
-  .record-entry::before {
-    content: '';
-    position: absolute;
-    left: 0; top: 0; bottom: 0;
-    width: 2px;
-    background: var(--cyan);
-    transform: scaleY(0);
-    transform-origin: bottom;
-    transition: transform 0.4s;
-  }
-
-  .record-entry:hover::before { transform: scaleY(1); }
-
-  .record-period {
-    padding: 32px 24px;
-    border-right: 1px solid rgba(255,255,255,0.04);
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-  }
-
-  .record-dates {
-    font-size: 10px;
-    letter-spacing: 0.2em;
-    color: var(--cyan);
-    opacity: 0.7;
-    margin-bottom: 6px;
-  }
-
-  .record-duration {
-    font-size: 9px;
-    letter-spacing: 0.2em;
-    color: var(--silver);
-    opacity: 0.35;
-  }
-
-  .record-body {
-    padding: 32px 40px;
-  }
-
-  .record-role {
-    font-family: 'Segoe UI', sans-serif;
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--white);
-    margin-bottom: 4px;
-    letter-spacing: -0.01em;
-  }
-
-  .record-company {
-    font-size: 10px;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    color: var(--silver);
-    opacity: 0.45;
-    margin-bottom: 16px;
-  }
-
-  .record-desc {
-    font-size: 12px;
-    line-height: 1.8;
-    color: var(--silver);
-    opacity: 0.6;
-    font-family: 'Segoe UI', sans-serif;
-    font-weight: 300;
-  }
-
-  .record-badge {
-    padding: 32px 28px;
-    display: flex;
-    align-items: flex-start;
-    justify-content: flex-end;
-  }
-
-  .badge {
-    font-size: 7px;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    color: var(--cyan);
-    border: 1px solid rgba(0,212,255,0.2);
-    padding: 5px 12px;
-    opacity: 0.7;
-  }
-
-  /* ─── CONTACT ─── */
-  #contact { background: transparent; }
-
-  .terminal-panel {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    backdrop-filter: blur(20px);
-    position: relative;
-    overflow: hidden;
-  }
-
-  .terminal-header {
-    padding: 14px 24px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(0,212,255,0.03);
-  }
-
-  .terminal-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-  }
-
-  .td-red { background: rgba(255,80,80,0.5); }
-  .td-yellow { background: rgba(255,200,0,0.5); }
-  .td-green { background: rgba(0,255,100,0.5); }
-
-  .terminal-title {
-    font-size: 9px;
-    letter-spacing: 0.3em;
-    color: var(--silver);
-    opacity: 0.4;
-    margin-left: 12px;
-  }
-
-  .terminal-body {
-    padding: 48px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 64px;
-    align-items: start;
-  }
-
-  .terminal-copy .section-title { margin-bottom: 20px; }
-
-  .terminal-text {
-    font-size: 13px;
-    line-height: 1.85;
-    color: var(--silver);
-    opacity: 0.65;
-    font-family: 'Segoe UI', sans-serif;
-    font-weight: 300;
-    margin-bottom: 40px;
-  }
-
-  .contact-links {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .contact-link {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    text-decoration: none;
-    color: var(--silver);
-    opacity: 0.6;
-    transition: opacity 0.3s, color 0.3s;
-    padding: 14px 20px;
-    border: 1px solid transparent;
-    font-size: 12px;
-    letter-spacing: 0.15em;
-  }
-
-  .contact-link:hover {
-    opacity: 1;
-    color: var(--cyan);
-    border-color: rgba(0,212,255,0.2);
-    background: rgba(0,212,255,0.03);
-  }
-
-  .contact-icon {
-    width: 28px; height: 28px;
-    border: 1px solid rgba(0,212,255,0.2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    color: var(--cyan);
-    flex-shrink: 0;
-  }
-
-  .contact-form {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .form-field {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .form-label {
-    font-size: 8px;
-    letter-spacing: 0.4em;
-    text-transform: uppercase;
-    color: var(--cyan);
-    opacity: 0.6;
-  }
-
-  .form-input {
-    background: rgba(0,212,255,0.03);
-    border: 1px solid rgba(255,255,255,0.06);
-    color: var(--white);
-    font-family: 'Courier New', monospace;
-    font-size: 13px;
-    padding: 12px 16px;
-    outline: none;
-    transition: border-color 0.3s;
-    resize: none;
-  }
-
-  .form-input:focus {
-    border-color: rgba(0,212,255,0.35);
-    background: rgba(0,212,255,0.04);
-  }
-
-  .form-input::placeholder { color: rgba(192,200,216,0.25); }
-
-  /* ─── FOOTER ─── */
-  footer {
-    position: relative;
-    z-index: 10;
-    padding: 28px 48px;
-    border-top: 1px solid rgba(255,255,255,0.04);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .footer-left {
-    font-size: 9px;
-    letter-spacing: 0.3em;
-    color: var(--silver);
-    opacity: 0.3;
-  }
-
-  .footer-right {
-    font-size: 9px;
-    letter-spacing: 0.3em;
-    color: var(--cyan);
-    opacity: 0.4;
-  }
-
-  /* ─── SCAN LINE OVERLAY ─── */
-  .scan-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 5;
-    pointer-events: none;
-    background: repeating-linear-gradient(
-      to bottom,
-      transparent 0px,
-      transparent 3px,
-      rgba(0,0,0,0.03) 3px,
-      rgba(0,0,0,0.03) 4px
-    );
-  }
-
-  /* ─── CORNER BRACKETS ─── */
-  .corner-tl, .corner-tr, .corner-bl, .corner-br {
-    position: fixed;
-    width: 20px; height: 20px;
-    z-index: 50;
-    pointer-events: none;
-    opacity: 0.4;
-  }
-  .corner-tl { top: 80px; left: 20px; border-top: 1px solid var(--cyan); border-left: 1px solid var(--cyan); }
-  .corner-tr { top: 80px; right: 20px; border-top: 1px solid var(--cyan); border-right: 1px solid var(--cyan); }
-  .corner-bl { bottom: 60px; left: 20px; border-bottom: 1px solid var(--cyan); border-left: 1px solid var(--cyan); }
-  .corner-br { bottom: 60px; right: 20px; border-bottom: 1px solid var(--cyan); border-right: 1px solid var(--cyan); }
-
-  /* ─── RESPONSIVE ─── */
-  @media (max-width: 900px) {
-    nav { padding: 16px 24px; }
-    .nav-links { gap: 24px; }
-    .nav-status { display: none; }
-    .section-inner { padding: 80px 24px; }
-    .projects-grid { grid-template-columns: 1fr; }
-    .skills-map { grid-template-columns: 1fr 1fr; }
-    .dossier-grid { grid-template-columns: 1fr; }
-    .record-entry { grid-template-columns: 1fr; }
-    .record-period { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.04); padding: 20px 24px; }
-    .record-badge { padding: 0 24px 24px; }
-    .terminal-body { grid-template-columns: 1fr; padding: 32px 24px; }
-    footer { flex-direction: column; gap: 12px; text-align: center; }
-  }
-
-  @media (max-width: 600px) {
-    .hero-name { font-size: 42px; }
-    .skills-map { grid-template-columns: 1fr; }
-    .dossier-stats { grid-template-columns: 1fr 1fr; }
-    .hero-cta-group { flex-direction: column; }
-    .nav-links { gap: 16px; }
-  }
-
-  /* ─── ANIMATIONS ─── */
-  .fade-in {
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.8s ease, transform 0.8s ease;
-  }
-  .fade-in.visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  .glitch-text {
-    position: relative;
-  }
-  .glitch-text::before,
-  .glitch-text::after {
-    content: attr(data-text);
-    position: absolute;
-    left: 0; top: 0;
-    width: 100%; height: 100%;
-  }
-  .glitch-text::before {
-    color: var(--cyan);
-    animation: glitch-1 4s infinite linear;
-    clip-path: polygon(0 20%, 100% 20%, 100% 40%, 0 40%);
-    opacity: 0.4;
-  }
-  .glitch-text::after {
-    color: #ff006e;
-    animation: glitch-2 4s infinite linear;
-    clip-path: polygon(0 60%, 100% 60%, 100% 75%, 0 75%);
-    opacity: 0.3;
-  }
-
-  @keyframes glitch-1 {
-    0%,90%,100% { transform: translateX(0); }
-    92% { transform: translateX(-3px); }
-    94% { transform: translateX(3px); }
-    96% { transform: translateX(-2px); }
-  }
-  @keyframes glitch-2 {
-    0%,90%,100% { transform: translateX(0); }
-    91% { transform: translateX(3px); }
-    93% { transform: translateX(-3px); }
-    95% { transform: translateX(2px); }
-  }
-</style>
+<title>David Moya | Portfolio</title>
+<link rel="stylesheet" href="./assets/css/site.css">
 </head>
-<body>
+<body data-content-source="./assets/data/profile.js" data-render-shell="portfolio">
+<!-- Content buckets preserved for the modular refactor: hero, about, projects, skills, experience, contact, footer. -->
 
 <!-- Ambient canvas bg -->
 <canvas id="vault-canvas"></canvas>
@@ -982,28 +18,28 @@
 <div class="corner-br"></div>
 
 <!-- Navigation -->
-<nav>
-  <div class="nav-logo">DVT <span>// THE DIGITAL VAULT</span></div>
-  <ul class="nav-links">
+<nav data-render-static="nav">
+  <div class="nav-logo">DM <span>// DAVID MOYA</span></div>
+  <ul class="nav-links" data-render-target="nav-links">
     <li><a href="#about">Profile</a></li>
     <li><a href="#projects">Archive</a></li>
     <li><a href="#skills">Systems</a></li>
     <li><a href="#experience">Records</a></li>
     <li><a href="#contact">Terminal</a></li>
   </ul>
-  <div class="nav-status">SECURE CONNECTION</div>
+  <div class="nav-status">VERIFIED CONNECTION</div>
 </nav>
 
-<!-- ─── HERO ─── -->
-<section id="hero">
-  <div class="hero-eyebrow">VAULT ID: 0x4F7A — AUTHENTICATED</div>
-  <h1 class="hero-name glitch-text" data-text="Alex Vance">
-    Alex<strong>Vance</strong>
+<!-- --- HERO --- -->
+<section id="hero" data-content-section="hero" data-render-scope="identity">
+  <div class="hero-eyebrow" data-field="identity.eyebrow">VAULT ID: 0x0000 - VERIFIED // AUTHORIZED</div>
+  <h1 class="hero-name glitch-text" data-field="identity.name" data-display="split-name">
+    David<strong>Moya</strong>
   </h1>
-  <p class="hero-title">Software Engineer &nbsp;·&nbsp; Cybersecurity Specialist &nbsp;·&nbsp; Systems Architect</p>
+  <p class="hero-title" data-field="identity.roleLine">Software Engineer &nbsp;&middot;&nbsp; Cybersecurity Specialist &nbsp;&middot;&nbsp; Systems Architect</p>
   <div class="hero-divider"></div>
-  <p class="hero-intro">
-    Building resilient systems at the intersection of performance engineering and digital defense. I architect secure, scalable software solutions for critical environments.
+  <p class="hero-intro" data-field="identity.intro">
+    Building practical software, web systems, and IT solutions with a focus on clean execution, strong usability, and real-world problem solving.
   </p>
   <div class="hero-cta-group">
     <a href="#projects" class="btn-primary">View Archive</a>
@@ -1015,37 +51,37 @@
   </div>
 </section>
 
-<!-- ─── ABOUT ─── -->
-<section id="about">
+<!-- --- ABOUT --- -->
+<section id="about" data-content-section="about" data-render-scope="about">
   <div class="section-inner">
     <div class="section-header fade-in">
-      <span class="section-tag">01 — Profile</span>
+      <span class="section-tag">01 - Profile</span>
       <div class="section-line"></div>
     </div>
-    <h2 class="section-title fade-in" style="margin-bottom:48px;">Personal <strong>Dossier</strong></h2>
+    <h2 class="section-title section-title-spaced fade-in" data-field="about.title" data-display="title-with-prefix">Personal <strong>Dossier</strong></h2>
     <div class="dossier-panel fade-in">
       <div class="dossier-grid">
-        <div class="dossier-bio">
-          <p>Classified engineer with a dual focus on high-performance software architecture and offensive-defensive cybersecurity systems. I operate at the boundary where elegant code meets adversarial environments.</p>
-          <p>Over the course of a decade, I've designed and deployed infrastructure for fintech, government-adjacent platforms, and high-stakes consumer products — each demanding both technical precision and security-first thinking.</p>
-          <p>When I'm not architecting systems, I'm reverse-engineering them — running CTFs, auditing open-source security protocols, and contributing to the defensive tooling ecosystem.</p>
+        <div class="dossier-bio" data-render-target="about.paragraphs" data-template="about-paragraph-template">
+          <p data-field="about.paragraphs[0]">Classified engineer with a dual focus on high-performance software architecture and offensive-defensive cybersecurity systems. I operate at the boundary where elegant code meets adversarial environments.</p>
+          <p data-field="about.paragraphs[1]">Over the course of a decade, I've designed and deployed infrastructure for fintech, government-adjacent platforms, and high-stakes consumer products - each demanding both technical precision and security-first thinking.</p>
+          <p data-field="about.paragraphs[2]">When I'm not architecting systems, I'm reverse-engineering them - running CTFs, auditing open-source security protocols, and contributing to the defensive tooling ecosystem.</p>
         </div>
-        <div class="dossier-stats">
-          <div class="stat-item">
-            <div class="stat-value">10+</div>
-            <div class="stat-label">Years Active</div>
+        <div class="dossier-stats" data-render-target="stats" data-template="stat-item-template">
+          <div class="stat-item" data-collection-item="stats">
+            <div class="stat-value" data-field="stats[0].value">10+</div>
+            <div class="stat-label" data-field="stats[0].label">Years Active</div>
           </div>
-          <div class="stat-item">
-            <div class="stat-value">42</div>
-            <div class="stat-label">Projects Shipped</div>
+          <div class="stat-item" data-collection-item="stats">
+            <div class="stat-value" data-field="stats[1].value">42</div>
+            <div class="stat-label" data-field="stats[1].label">Projects Shipped</div>
           </div>
-          <div class="stat-item">
-            <div class="stat-value">17</div>
-            <div class="stat-label">CVEs Reported</div>
+          <div class="stat-item" data-collection-item="stats">
+            <div class="stat-value" data-field="stats[2].value">17</div>
+            <div class="stat-label" data-field="stats[2].label">CVEs Reported</div>
           </div>
-          <div class="stat-item">
-            <div class="stat-value">6</div>
-            <div class="stat-label">Certifications</div>
+          <div class="stat-item" data-collection-item="stats">
+            <div class="stat-value" data-field="stats[3].value">6</div>
+            <div class="stat-label" data-field="stats[3].label">Certifications</div>
           </div>
         </div>
       </div>
@@ -1053,99 +89,99 @@
   </div>
 </section>
 
-<!-- ─── PROJECTS ─── -->
-<section id="projects">
+<!-- --- PROJECTS --- -->
+<section id="projects" data-content-section="projects" data-render-scope="projects">
   <div class="section-inner">
     <div class="section-header fade-in">
-      <span class="section-tag">02 — Archive</span>
+      <span class="section-tag">02 - Archive</span>
       <div class="section-line"></div>
     </div>
-    <h2 class="section-title fade-in" style="margin-bottom:48px;">Project <strong>Archive</strong></h2>
-    <div class="projects-grid">
+    <h2 class="section-title section-title-spaced fade-in">Project <strong>Archive</strong></h2>
+    <div class="projects-grid" data-render-target="projects" data-template="project-pod-template">
 
-      <div class="project-pod fade-in">
+      <div class="project-pod fade-in" data-collection-item="projects">
         <div class="pod-classified">FEATURED</div>
         <div class="pod-inner">
-          <div class="pod-index">POD — 001</div>
-          <h3 class="pod-title">SentinelNet</h3>
-          <p class="pod-desc">Real-time network intrusion detection system leveraging ML-based anomaly scoring and adaptive firewall rule generation. Deployed across 3 enterprise environments.</p>
-          <div class="pod-tags">
-            <span class="pod-tag">Python</span>
-            <span class="pod-tag">Rust</span>
-            <span class="pod-tag">ML</span>
-            <span class="pod-tag">eBPF</span>
+          <div class="pod-index" data-field="projects[0].id" data-prefix="POD - ">POD - 001</div>
+          <h3 class="pod-title" data-field="projects[0].title">SentinelNet</h3>
+          <p class="pod-desc" data-field="projects[0].description">Real-time network intrusion detection system leveraging ML-based anomaly scoring and adaptive firewall rule generation. Deployed across 3 enterprise environments.</p>
+          <div class="pod-tags" data-render-target="projects[0].tags" data-template="project-tag-template">
+            <span class="pod-tag" data-field="projects[0].tags[0]">Python</span>
+            <span class="pod-tag" data-field="projects[0].tags[1]">Rust</span>
+            <span class="pod-tag" data-field="projects[0].tags[2]">ML</span>
+            <span class="pod-tag" data-field="projects[0].tags[3]">eBPF</span>
           </div>
-          <a href="#" class="pod-link">Access Record</a>
+          <a class="pod-link" data-field="projects[0].href" data-attr="href">Access Record</a>
         </div>
       </div>
 
-      <div class="project-pod fade-in">
+      <div class="project-pod fade-in" data-collection-item="projects">
         <div class="pod-inner">
-          <div class="pod-index">POD — 002</div>
-          <h3 class="pod-title">VaultChain</h3>
-          <p class="pod-desc">Decentralized credential vault using threshold cryptography and zero-knowledge proofs for privacy-preserving identity management at scale.</p>
-          <div class="pod-tags">
-            <span class="pod-tag">Solidity</span>
-            <span class="pod-tag">ZK-SNARKs</span>
-            <span class="pod-tag">TypeScript</span>
+          <div class="pod-index" data-field="projects[1].id" data-prefix="POD - ">POD - 002</div>
+          <h3 class="pod-title" data-field="projects[1].title">VaultChain</h3>
+          <p class="pod-desc" data-field="projects[1].description">Decentralized credential vault using threshold cryptography and zero-knowledge proofs for privacy-preserving identity management at scale.</p>
+          <div class="pod-tags" data-render-target="projects[1].tags" data-template="project-tag-template">
+            <span class="pod-tag" data-field="projects[1].tags[0]">Solidity</span>
+            <span class="pod-tag" data-field="projects[1].tags[1]">ZK-SNARKs</span>
+            <span class="pod-tag" data-field="projects[1].tags[2]">TypeScript</span>
           </div>
-          <a href="#" class="pod-link">Access Record</a>
+          <a class="pod-link" data-field="projects[1].href" data-attr="href">Access Record</a>
         </div>
       </div>
 
-      <div class="project-pod fade-in">
+      <div class="project-pod fade-in" data-collection-item="projects">
         <div class="pod-inner">
-          <div class="pod-index">POD — 003</div>
-          <h3 class="pod-title">GhostProxy</h3>
-          <p class="pod-desc">High-throughput transparent proxy engine with traffic fingerprinting evasion and automated protocol obfuscation for operational security research.</p>
-          <div class="pod-tags">
-            <span class="pod-tag">Go</span>
-            <span class="pod-tag">C++</span>
-            <span class="pod-tag">Networking</span>
+          <div class="pod-index" data-field="projects[2].id" data-prefix="POD - ">POD - 003</div>
+          <h3 class="pod-title" data-field="projects[2].title">GhostProxy</h3>
+          <p class="pod-desc" data-field="projects[2].description">High-throughput transparent proxy engine with traffic fingerprinting evasion and automated protocol obfuscation for operational security research.</p>
+          <div class="pod-tags" data-render-target="projects[2].tags" data-template="project-tag-template">
+            <span class="pod-tag" data-field="projects[2].tags[0]">Go</span>
+            <span class="pod-tag" data-field="projects[2].tags[1]">C++</span>
+            <span class="pod-tag" data-field="projects[2].tags[2]">Networking</span>
           </div>
-          <a href="#" class="pod-link">Access Record</a>
+          <a class="pod-link" data-field="projects[2].href" data-attr="href">Access Record</a>
         </div>
       </div>
 
-      <div class="project-pod fade-in">
+      <div class="project-pod fade-in" data-collection-item="projects">
         <div class="pod-inner">
-          <div class="pod-index">POD — 004</div>
-          <h3 class="pod-title">CorePulse API</h3>
-          <p class="pod-desc">Fault-tolerant distributed API gateway serving 80M+ monthly requests with automated circuit breaking, rate limiting, and zero-downtime deployments.</p>
-          <div class="pod-tags">
-            <span class="pod-tag">Node.js</span>
-            <span class="pod-tag">Kubernetes</span>
-            <span class="pod-tag">gRPC</span>
+          <div class="pod-index" data-field="projects[3].id" data-prefix="POD - ">POD - 004</div>
+          <h3 class="pod-title" data-field="projects[3].title">CorePulse API</h3>
+          <p class="pod-desc" data-field="projects[3].description">Fault-tolerant distributed API gateway serving 80M+ monthly requests with automated circuit breaking, rate limiting, and zero-downtime deployments.</p>
+          <div class="pod-tags" data-render-target="projects[3].tags" data-template="project-tag-template">
+            <span class="pod-tag" data-field="projects[3].tags[0]">Node.js</span>
+            <span class="pod-tag" data-field="projects[3].tags[1]">Kubernetes</span>
+            <span class="pod-tag" data-field="projects[3].tags[2]">gRPC</span>
           </div>
-          <a href="#" class="pod-link">Access Record</a>
+          <a class="pod-link" data-field="projects[3].href" data-attr="href">Access Record</a>
         </div>
       </div>
 
-      <div class="project-pod fade-in">
+      <div class="project-pod fade-in" data-collection-item="projects">
         <div class="pod-inner">
-          <div class="pod-index">POD — 005</div>
-          <h3 class="pod-title">Recon Atlas</h3>
-          <p class="pod-desc">OSINT automation framework for passive digital footprint analysis. Aggregates and correlates data from 60+ public sources into structured threat intelligence.</p>
-          <div class="pod-tags">
-            <span class="pod-tag">Python</span>
-            <span class="pod-tag">Neo4j</span>
-            <span class="pod-tag">OSINT</span>
+          <div class="pod-index" data-field="projects[4].id" data-prefix="POD - ">POD - 005</div>
+          <h3 class="pod-title" data-field="projects[4].title">Recon Atlas</h3>
+          <p class="pod-desc" data-field="projects[4].description">OSINT automation framework for passive digital footprint analysis. Aggregates and correlates data from 60+ public sources into structured threat intelligence.</p>
+          <div class="pod-tags" data-render-target="projects[4].tags" data-template="project-tag-template">
+            <span class="pod-tag" data-field="projects[4].tags[0]">Python</span>
+            <span class="pod-tag" data-field="projects[4].tags[1]">Neo4j</span>
+            <span class="pod-tag" data-field="projects[4].tags[2]">OSINT</span>
           </div>
-          <a href="#" class="pod-link">Access Record</a>
+          <a class="pod-link" data-field="projects[4].href" data-attr="href">Access Record</a>
         </div>
       </div>
 
-      <div class="project-pod fade-in">
+      <div class="project-pod fade-in" data-collection-item="projects">
         <div class="pod-inner">
-          <div class="pod-index">POD — 006</div>
-          <h3 class="pod-title">HexForge IDE</h3>
-          <p class="pod-desc">Browser-native low-level hex editor and disassembler with real-time binary diffing, entropy visualization, and pattern signature scanning.</p>
-          <div class="pod-tags">
-            <span class="pod-tag">WASM</span>
-            <span class="pod-tag">React</span>
-            <span class="pod-tag">Assembly</span>
+          <div class="pod-index" data-field="projects[5].id" data-prefix="POD - ">POD - 006</div>
+          <h3 class="pod-title" data-field="projects[5].title">HexForge IDE</h3>
+          <p class="pod-desc" data-field="projects[5].description">Browser-native low-level hex editor and disassembler with real-time binary diffing, entropy visualization, and pattern signature scanning.</p>
+          <div class="pod-tags" data-render-target="projects[5].tags" data-template="project-tag-template">
+            <span class="pod-tag" data-field="projects[5].tags[0]">WASM</span>
+            <span class="pod-tag" data-field="projects[5].tags[1]">React</span>
+            <span class="pod-tag" data-field="projects[5].tags[2]">Assembly</span>
           </div>
-          <a href="#" class="pod-link">Access Record</a>
+          <a class="pod-link" data-field="projects[5].href" data-attr="href">Access Record</a>
         </div>
       </div>
 
@@ -1153,65 +189,65 @@
   </div>
 </section>
 
-<!-- ─── SKILLS ─── -->
-<section id="skills">
+<!-- --- SKILLS --- -->
+<section id="skills" data-content-section="skills" data-render-scope="skills">
   <div class="section-inner">
     <div class="section-header fade-in">
-      <span class="section-tag">03 — Systems</span>
+      <span class="section-tag">03 - Systems</span>
       <div class="section-line"></div>
     </div>
-    <h2 class="section-title fade-in" style="margin-bottom:48px;">Capability <strong>Matrix</strong></h2>
-    <div class="skills-map">
+    <h2 class="section-title section-title-spaced fade-in">Capability <strong>Matrix</strong></h2>
+    <div class="skills-map" data-render-target="skills" data-template="skill-category-template">
 
-      <div class="skill-category fade-in">
-        <div class="skill-cat-label">Languages</div>
-        <ul class="skill-list">
-          <li class="skill-item">Python</li>
-          <li class="skill-item">Rust</li>
-          <li class="skill-item">Go</li>
-          <li class="skill-item">C / C++</li>
-          <li class="skill-item">TypeScript</li>
-          <li class="skill-item">Solidity</li>
-          <li class="skill-item">Assembly (x86)</li>
+      <div class="skill-category fade-in" data-collection-item="skills">
+        <div class="skill-cat-label" data-field="skills[0].category">Languages</div>
+        <ul class="skill-list" data-render-target="skills[0].items" data-template="skill-item-template">
+          <li class="skill-item" data-field="skills[0].items[0]">Python</li>
+          <li class="skill-item" data-field="skills[0].items[1]">Rust</li>
+          <li class="skill-item" data-field="skills[0].items[2]">Go</li>
+          <li class="skill-item" data-field="skills[0].items[3]">C / C++</li>
+          <li class="skill-item" data-field="skills[0].items[4]">TypeScript</li>
+          <li class="skill-item" data-field="skills[0].items[5]">Solidity</li>
+          <li class="skill-item" data-field="skills[0].items[6]">Assembly (x86)</li>
         </ul>
       </div>
 
-      <div class="skill-category fade-in">
-        <div class="skill-cat-label">Cybersecurity</div>
-        <ul class="skill-list">
-          <li class="skill-item">Penetration Testing</li>
-          <li class="skill-item">Reverse Engineering</li>
-          <li class="skill-item">Exploit Development</li>
-          <li class="skill-item">Threat Modeling</li>
-          <li class="skill-item">Network Forensics</li>
-          <li class="skill-item">Malware Analysis</li>
-          <li class="skill-item">OSINT</li>
+      <div class="skill-category fade-in" data-collection-item="skills">
+        <div class="skill-cat-label" data-field="skills[1].category">Cybersecurity</div>
+        <ul class="skill-list" data-render-target="skills[1].items" data-template="skill-item-template">
+          <li class="skill-item" data-field="skills[1].items[0]">Penetration Testing</li>
+          <li class="skill-item" data-field="skills[1].items[1]">Reverse Engineering</li>
+          <li class="skill-item" data-field="skills[1].items[2]">Exploit Development</li>
+          <li class="skill-item" data-field="skills[1].items[3]">Threat Modeling</li>
+          <li class="skill-item" data-field="skills[1].items[4]">Network Forensics</li>
+          <li class="skill-item" data-field="skills[1].items[5]">Malware Analysis</li>
+          <li class="skill-item" data-field="skills[1].items[6]">OSINT</li>
         </ul>
       </div>
 
-      <div class="skill-category fade-in">
-        <div class="skill-cat-label">Infrastructure</div>
-        <ul class="skill-list">
-          <li class="skill-item">Kubernetes</li>
-          <li class="skill-item">Docker / Podman</li>
-          <li class="skill-item">Terraform</li>
-          <li class="skill-item">AWS / GCP</li>
-          <li class="skill-item">eBPF</li>
-          <li class="skill-item">gRPC / Protobuf</li>
-          <li class="skill-item">Linux Internals</li>
+      <div class="skill-category fade-in" data-collection-item="skills">
+        <div class="skill-cat-label" data-field="skills[2].category">Infrastructure</div>
+        <ul class="skill-list" data-render-target="skills[2].items" data-template="skill-item-template">
+          <li class="skill-item" data-field="skills[2].items[0]">Kubernetes</li>
+          <li class="skill-item" data-field="skills[2].items[1]">Docker / Podman</li>
+          <li class="skill-item" data-field="skills[2].items[2]">Terraform</li>
+          <li class="skill-item" data-field="skills[2].items[3]">AWS / GCP</li>
+          <li class="skill-item" data-field="skills[2].items[4]">eBPF</li>
+          <li class="skill-item" data-field="skills[2].items[5]">gRPC / Protobuf</li>
+          <li class="skill-item" data-field="skills[2].items[6]">Linux Internals</li>
         </ul>
       </div>
 
-      <div class="skill-category fade-in">
-        <div class="skill-cat-label">Frameworks & Tools</div>
-        <ul class="skill-list">
-          <li class="skill-item">Burp Suite</li>
-          <li class="skill-item">Ghidra / IDA Pro</li>
-          <li class="skill-item">Metasploit</li>
-          <li class="skill-item">Wireshark</li>
-          <li class="skill-item">React / Next.js</li>
-          <li class="skill-item">LLVM</li>
-          <li class="skill-item">PostgreSQL</li>
+      <div class="skill-category fade-in" data-collection-item="skills">
+        <div class="skill-cat-label" data-field="skills[3].category">Frameworks & Tools</div>
+        <ul class="skill-list" data-render-target="skills[3].items" data-template="skill-item-template">
+          <li class="skill-item" data-field="skills[3].items[0]">Burp Suite</li>
+          <li class="skill-item" data-field="skills[3].items[1]">Ghidra / IDA Pro</li>
+          <li class="skill-item" data-field="skills[3].items[2]">Metasploit</li>
+          <li class="skill-item" data-field="skills[3].items[3]">Wireshark</li>
+          <li class="skill-item" data-field="skills[3].items[4]">React / Next.js</li>
+          <li class="skill-item" data-field="skills[3].items[5]">LLVM</li>
+          <li class="skill-item" data-field="skills[3].items[6]">PostgreSQL</li>
         </ul>
       </div>
 
@@ -1219,80 +255,80 @@
   </div>
 </section>
 
-<!-- ─── EXPERIENCE ─── -->
-<section id="experience">
+<!-- --- EXPERIENCE --- -->
+<section id="experience" data-content-section="experience" data-render-scope="experience">
   <div class="section-inner">
     <div class="section-header fade-in">
-      <span class="section-tag">04 — Records</span>
+      <span class="section-tag">04 - Records</span>
       <div class="section-line"></div>
     </div>
-    <h2 class="section-title fade-in" style="margin-bottom:48px;">Operational <strong>History</strong></h2>
-    <div class="records-wall">
+    <h2 class="section-title section-title-spaced fade-in">Operational <strong>History</strong></h2>
+    <div class="records-wall" data-render-target="experience" data-template="record-entry-template">
 
-      <div class="record-entry fade-in">
+      <div class="record-entry fade-in" data-collection-item="experience">
         <div class="record-period">
-          <div class="record-dates">2022 — Present</div>
-          <div class="record-duration">3 yrs</div>
+          <div class="record-dates" data-field="experience[0].dates">2022 - Present</div>
+          <div class="record-duration" data-field="experience[0].duration">3 yrs</div>
         </div>
         <div class="record-body">
-          <div class="record-role">Principal Security Engineer</div>
-          <div class="record-company">Axiom Systems Corp.</div>
-          <p class="record-desc">Leading security architecture for a distributed financial infrastructure processing $2B in daily transactions. Spearheaded zero-trust network redesign, cutting breach surface by 74%.</p>
+          <div class="record-role" data-field="experience[0].role">Principal Security Engineer</div>
+          <div class="record-company" data-field="experience[0].company">Axiom Systems Corp.</div>
+          <p class="record-desc" data-field="experience[0].description">Leading security architecture for a distributed financial infrastructure processing $2B in daily transactions. Spearheaded zero-trust network redesign, cutting breach surface by 74%.</p>
         </div>
-        <div class="record-badge"><span class="badge">Current</span></div>
+        <div class="record-badge"><span class="badge" data-field="experience[0].badge">Current</span></div>
       </div>
 
-      <div class="record-entry fade-in">
+      <div class="record-entry fade-in" data-collection-item="experience">
         <div class="record-period">
-          <div class="record-dates">2019 — 2022</div>
-          <div class="record-duration">3 yrs</div>
+          <div class="record-dates" data-field="experience[1].dates">2019 - 2022</div>
+          <div class="record-duration" data-field="experience[1].duration">3 yrs</div>
         </div>
         <div class="record-body">
-          <div class="record-role">Senior Software Engineer</div>
-          <div class="record-company">Helix Cloud Infrastructure</div>
-          <p class="record-desc">Designed and shipped a multi-tenant cloud orchestration platform used by 300+ enterprise clients. Reduced p99 latency by 60% through custom kernel-level networking optimizations.</p>
+          <div class="record-role" data-field="experience[1].role">Senior Software Engineer</div>
+          <div class="record-company" data-field="experience[1].company">Helix Cloud Infrastructure</div>
+          <p class="record-desc" data-field="experience[1].description">Designed and shipped a multi-tenant cloud orchestration platform used by 300+ enterprise clients. Reduced p99 latency by 60% through custom kernel-level networking optimizations.</p>
         </div>
-        <div class="record-badge"><span class="badge">Completed</span></div>
+        <div class="record-badge"><span class="badge" data-field="experience[1].badge">Completed</span></div>
       </div>
 
-      <div class="record-entry fade-in">
+      <div class="record-entry fade-in" data-collection-item="experience">
         <div class="record-period">
-          <div class="record-dates">2016 — 2019</div>
-          <div class="record-duration">3 yrs</div>
+          <div class="record-dates" data-field="experience[2].dates">2016 - 2019</div>
+          <div class="record-duration" data-field="experience[2].duration">3 yrs</div>
         </div>
         <div class="record-body">
-          <div class="record-role">Security Researcher</div>
-          <div class="record-company">Darkroom Labs (Independent)</div>
-          <p class="record-desc">Full-time independent vulnerability research, CTF competition, and responsible disclosure. Published 17 CVEs. Ranked top 50 globally on HackTheBox.</p>
+          <div class="record-role" data-field="experience[2].role">Security Researcher</div>
+          <div class="record-company" data-field="experience[2].company">Darkroom Labs (Independent)</div>
+          <p class="record-desc" data-field="experience[2].description">Full-time independent vulnerability research, CTF competition, and responsible disclosure. Published 17 CVEs. Ranked top 50 globally on HackTheBox.</p>
         </div>
-        <div class="record-badge"><span class="badge">Completed</span></div>
+        <div class="record-badge"><span class="badge" data-field="experience[2].badge">Completed</span></div>
       </div>
 
-      <div class="record-entry fade-in">
+      <div class="record-entry fade-in" data-collection-item="experience">
         <div class="record-period">
-          <div class="record-dates">2014 — 2016</div>
-          <div class="record-duration">2 yrs</div>
+          <div class="record-dates" data-field="experience[3].dates">2014 - 2016</div>
+          <div class="record-duration" data-field="experience[3].duration">2 yrs</div>
         </div>
         <div class="record-body">
-          <div class="record-role">Backend Engineer</div>
-          <div class="record-company">Vortex Digital</div>
-          <p class="record-desc">Built core API infrastructure and data pipelines for a Series B SaaS analytics platform. First engineering hire — scaled team from 2 to 12 engineers.</p>
+          <div class="record-role" data-field="experience[3].role">Backend Engineer</div>
+          <div class="record-company" data-field="experience[3].company">Vortex Digital</div>
+          <p class="record-desc" data-field="experience[3].description">Built core API infrastructure and data pipelines for a Series B SaaS analytics platform. First engineering hire - scaled team from 2 to 12 engineers.</p>
         </div>
-        <div class="record-badge"><span class="badge">Completed</span></div>
+        <div class="record-badge"><span class="badge" data-field="experience[3].badge">Completed</span></div>
       </div>
 
     </div>
   </div>
 </section>
 
-<!-- ─── CONTACT ─── -->
-<section id="contact">
+<!-- --- CONTACT --- -->
+<section id="contact" data-content-section="contact" data-render-scope="links">
   <div class="section-inner">
     <div class="section-header fade-in">
-      <span class="section-tag">05 — Terminal</span>
+      <span class="section-tag">05 - Terminal</span>
       <div class="section-line"></div>
     </div>
-    <h2 class="section-title fade-in" style="margin-bottom:48px;">Communication <strong>Terminal</strong></h2>
+    <h2 class="section-title section-title-spaced fade-in">Communication <strong>Terminal</strong></h2>
     <div class="terminal-panel fade-in">
       <div class="terminal-header">
         <div class="terminal-dot td-red"></div>
@@ -1302,24 +338,20 @@
       </div>
       <div class="terminal-body">
         <div class="terminal-copy">
-          <h3 class="section-title" style="margin-bottom:16px;">Open a <strong>Channel</strong></h3>
-          <p class="terminal-text">Interested in working together, reporting a vulnerability, or discussing systems architecture? All channels are monitored. Response time: 24–48 hours.</p>
-          <div class="contact-links">
-            <a href="mailto:alex@thedigitalvault.dev" class="contact-link">
+          <h3 class="section-title section-title-compact">Open a <strong>Channel</strong></h3>
+          <p class="terminal-text">Interested in working together, reporting a vulnerability, or discussing systems architecture? All channels are monitored. Response time: 24-48 hours.</p>
+          <div class="contact-links" data-render-target="links" data-template="contact-link-template">
+            <a href="mailto:davidmoya1309@gmail.com" class="contact-link" data-link-key="email" data-field="links.email" data-attr="href">
               <div class="contact-icon">@</div>
-              alex@thedigitalvault.dev
+              davidmoya1309@gmail.com
             </a>
-            <a href="#" class="contact-link">
+            <a href="https://www.linkedin.com/in/is-david-moya/" class="contact-link" data-link-key="linkedin" data-field="links.linkedin" data-attr="href">
               <div class="contact-icon">in</div>
-              linkedin.com/in/alexvance
+              linkedin.com/in/is-david-moya
             </a>
-            <a href="#" class="contact-link">
+            <a href="https://github.com/DavidKingOMG" class="contact-link" data-link-key="github" data-field="links.github" data-attr="href">
               <div class="contact-icon">gh</div>
-              github.com/alexvance
-            </a>
-            <a href="#" class="contact-link">
-              <div class="contact-icon">tw</div>
-              @vaultdev
+              github.com/DavidKingOMG
             </a>
           </div>
         </div>
@@ -1336,7 +368,7 @@
             <label class="form-label">Message</label>
             <textarea class="form-input" rows="5" placeholder="Describe your request..."></textarea>
           </div>
-          <button type="submit" class="btn-primary" style="align-self:flex-start;">Transmit</button>
+          <button type="submit" class="btn-primary contact-submit">Transmit</button>
         </form>
       </div>
     </div>
@@ -1344,321 +376,81 @@
 </section>
 
 <!-- Footer -->
-<footer>
-  <div class="footer-left">© 2026 ALEX VANCE — THE DIGITAL VAULT. ALL RIGHTS RESERVED.</div>
-  <div class="footer-right">VAULT PROTOCOL v4.1.0 — ONLINE</div>
+<footer data-content-section="footer">
+  <div class="footer-left">&copy; 2026 DAVID MOYA - PORTFOLIO SYSTEMS. ALL RIGHTS RESERVED.</div>
+  <div class="footer-right">VAULT PROTOCOL v4.1.0 - VERIFIED</div>
 </footer>
+
+<template id="about-paragraph-template">
+  <p></p>
+</template>
+
+<template id="stat-item-template">
+  <div class="stat-item">
+    <div class="stat-value"></div>
+    <div class="stat-label"></div>
+  </div>
+</template>
+
+<template id="project-pod-template">
+  <div class="project-pod fade-in">
+    <div class="pod-classified" hidden>FEATURED</div>
+    <div class="pod-inner">
+      <div class="pod-index"></div>
+      <h3 class="pod-title"></h3>
+      <p class="pod-desc"></p>
+      <div class="pod-tags"></div>
+      <a class="pod-link">Access Record</a>
+    </div>
+  </div>
+</template>
+
+<template id="project-tag-template">
+  <span class="pod-tag"></span>
+</template>
+
+<template id="skill-category-template">
+  <div class="skill-category fade-in">
+    <div class="skill-cat-label"></div>
+    <ul class="skill-list"></ul>
+  </div>
+</template>
+
+<template id="skill-item-template">
+  <li class="skill-item"></li>
+</template>
+
+<template id="record-entry-template">
+  <div class="record-entry fade-in">
+    <div class="record-period">
+      <div class="record-dates"></div>
+      <div class="record-duration"></div>
+    </div>
+    <div class="record-body">
+      <div class="record-role"></div>
+      <div class="record-company"></div>
+      <p class="record-desc"></p>
+    </div>
+    <div class="record-badge"><span class="badge"></span></div>
+  </div>
+</template>
+
+<template id="contact-link-template">
+  <a href="#" class="contact-link">
+    <div class="contact-icon"></div>
+    <span></span>
+  </a>
+</template>
 
 <script type="importmap">
 {
   "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/threethree.module.js",
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
     "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
   }
 }
 </script>
 
-<script type="module">
-import * as THREE from 'three';
-
-// ─── SCENE SETUP ───
-const canvas = document.getElementById('vault-canvas');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.1;
-
-const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x04060f, 0.035);
-
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 200);
-camera.position.set(0, 2, 14);
-camera.lookAt(0, 0, 0);
-
-// ─── LIGHTING ───
-const ambientLight = new THREE.AmbientLight(0x0a1020, 1.0);
-scene.add(ambientLight);
-
-const sunLight = new THREE.DirectionalLight(0xffffff, 0.6);
-sunLight.position.set(5, 8, 5);
-scene.add(sunLight);
-
-const cyanLight = new THREE.PointLight(0x00d4ff, 2.5, 25);
-cyanLight.position.set(-4, 3, 0);
-scene.add(cyanLight);
-
-const blueLight = new THREE.PointLight(0x0044cc, 1.8, 30);
-blueLight.position.set(6, -2, -5);
-scene.add(blueLight);
-
-const silverLight = new THREE.PointLight(0xaabbdd, 0.8, 20);
-silverLight.position.set(0, 6, 4);
-scene.add(silverLight);
-
-// ─── FLOOR PLANE (reflective) ───
-const floorGeo = new THREE.PlaneGeometry(80, 80, 1, 1);
-const floorMat = new THREE.MeshStandardMaterial({
-  color: 0x050810,
-  metalness: 0.85,
-  roughness: 0.3,
-  envMapIntensity: 0.5
-});
-const floor = new THREE.Mesh(floorGeo, floorMat);
-floor.rotation.x = -Math.PI / 2;
-floor.position.y = -3;
-scene.add(floor);
-
-// ─── GRID ON FLOOR ───
-const gridHelper = new THREE.GridHelper(80, 80, 0x00d4ff, 0x0a1428);
-gridHelper.position.y = -2.99;
-gridHelper.material.opacity = 0.25;
-gridHelper.material.transparent = true;
-scene.add(gridHelper);
-
-// ─── SERVER CORE PILLARS ───
-const pillarMat = new THREE.MeshStandardMaterial({
-  color: 0x080e1e,
-  metalness: 0.9,
-  roughness: 0.2
-});
-
-const pillarPositions = [
-  [-7, 0, -8], [7, 0, -8],
-  [-10, 0, -2], [10, 0, -2],
-  [-5, 0, -14], [5, 0, -14],
-];
-
-pillarPositions.forEach(([x, y, z]) => {
-  const geo = new THREE.BoxGeometry(0.6, 12, 0.6);
-  const pillar = new THREE.Mesh(geo, pillarMat);
-  pillar.position.set(x, y, z);
-  scene.add(pillar);
-
-  // Cyan light strip on each pillar
-  const stripGeo = new THREE.BoxGeometry(0.08, 8, 0.08);
-  const stripMat = new THREE.MeshBasicMaterial({ color: 0x00d4ff });
-  const strip = new THREE.Mesh(stripGeo, stripMat);
-  strip.position.set(x + 0.25, y, z + 0.25);
-  scene.add(strip);
-});
-
-// ─── FLOATING HOLOGRAPHIC RINGS ───
-const rings = [];
-for (let i = 0; i < 3; i++) {
-  const ringGeo = new THREE.TorusGeometry(2.5 + i * 1.2, 0.02, 8, 80);
-  const ringMat = new THREE.MeshBasicMaterial({
-    color: i === 0 ? 0x00d4ff : i === 1 ? 0x0055cc : 0x334466,
-    transparent: true,
-    opacity: 0.25 - i * 0.06
-  });
-  const ring = new THREE.Mesh(ringGeo, ringMat);
-  ring.rotation.x = Math.PI / 2;
-  ring.position.set(0, -0.5 + i * 0.5, -6);
-  scene.add(ring);
-  rings.push(ring);
-}
-
-// ─── PARTICLES ───
-const particlesGeo = new THREE.BufferGeometry();
-const particleCount = 2200;
-const positions = new Float32Array(particleCount * 3);
-const particleColors = new Float32Array(particleCount * 3);
-
-for (let i = 0; i < particleCount; i++) {
-  const i3 = i * 3;
-  positions[i3]     = (Math.random() - 0.5) * 60;
-  positions[i3 + 1] = (Math.random() - 0.5) * 30;
-  positions[i3 + 2] = (Math.random() - 0.5) * 60;
-
-  const t = Math.random();
-  if (t < 0.6) {
-    // cyan
-    particleColors[i3] = 0.0; particleColors[i3+1] = 0.75; particleColors[i3+2] = 1.0;
-  } else if (t < 0.85) {
-    // blue
-    particleColors[i3] = 0.1; particleColors[i3+1] = 0.3; particleColors[i3+2] = 0.85;
-  } else {
-    // silver
-    particleColors[i3] = 0.7; particleColors[i3+1] = 0.75; particleColors[i3+2] = 0.85;
-  }
-}
-
-particlesGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-particlesGeo.setAttribute('color', new THREE.BufferAttribute(particleColors, 3));
-
-const particlesMat = new THREE.PointsMaterial({
-  size: 0.06,
-  vertexColors: true,
-  transparent: true,
-  opacity: 0.55,
-  sizeAttenuation: true
-});
-
-const particles = new THREE.Points(particlesGeo, particlesMat);
-scene.add(particles);
-
-// ─── FLOATING ARCHIVE CAPSULES ───
-const capsules = [];
-const capsuleData = [
-  { x: -5, z: -3 }, { x: 0, z: -4 }, { x: 5, z: -3 },
-  { x: -3, z: -7 }, { x: 3, z: -7 }, { x: 0, z: -9 }
-];
-
-capsuleData.forEach((d, i) => {
-  const group = new THREE.Group();
-
-  const bodyGeo = new THREE.BoxGeometry(1.6, 0.4, 0.9);
-  const bodyMat = new THREE.MeshStandardMaterial({
-    color: 0x080e22,
-    metalness: 0.9,
-    roughness: 0.15,
-    transparent: true,
-    opacity: 0.85
-  });
-  const body = new THREE.Mesh(bodyGeo, bodyMat);
-  group.add(body);
-
-  // Edge glow frame
-  const edgeGeo = new THREE.EdgesGeometry(bodyGeo);
-  const edgeMat = new THREE.LineBasicMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.5 });
-  const edges = new THREE.LineSegments(edgeGeo, edgeMat);
-  group.add(edges);
-
-  group.position.set(d.x, 0.5 + Math.sin(i * 1.3) * 0.3, d.z);
-  group.userData.baseY = group.position.y;
-  group.userData.phase = i * 1.1;
-
-  scene.add(group);
-  capsules.push(group);
-});
-
-// ─── CENTRAL CORE ───
-const coreGeo = new THREE.OctahedronGeometry(0.9, 2);
-const coreMat = new THREE.MeshStandardMaterial({
-  color: 0x001428,
-  metalness: 1.0,
-  roughness: 0.05,
-  emissive: 0x003366,
-  emissiveIntensity: 0.3
-});
-const core = new THREE.Mesh(coreGeo, coreMat);
-core.position.set(0, 1.5, -6);
-scene.add(core);
-
-const coreEdgeGeo = new THREE.EdgesGeometry(coreGeo);
-const coreEdgeMat = new THREE.LineBasicMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.8 });
-const coreEdge = new THREE.LineSegments(coreEdgeGeo, coreEdgeMat);
-coreEdge.position.copy(core.position);
-scene.add(coreEdge);
-
-// ─── WALL PANELS ───
-const panelMat = new THREE.MeshStandardMaterial({
-  color: 0x060b18,
-  metalness: 0.8,
-  roughness: 0.3,
-  side: THREE.DoubleSide
-});
-
-// Back wall panels
-for (let i = -3; i <= 3; i++) {
-  const pGeo = new THREE.PlaneGeometry(2.8, 7);
-  const panel = new THREE.Mesh(pGeo, panelMat);
-  panel.position.set(i * 3.2, 0.5, -16);
-  scene.add(panel);
-
-  // horizontal seam lines
-  const lineGeo = new THREE.BufferGeometry().setFromPoints([
-    new THREE.Vector3(-1.4, 0, 0), new THREE.Vector3(1.4, 0, 0)
-  ]);
-  const lineMat = new THREE.LineBasicMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.15 });
-  const line = new THREE.Line(lineGeo, lineMat);
-  line.position.set(i * 3.2, 2.5, -15.98);
-  scene.add(line);
-}
-
-// ─── MOUSE PARALLAX ───
-let mouseX = 0, mouseY = 0;
-let targetX = 0, targetY = 0;
-
-document.addEventListener('mousemove', (e) => {
-  mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
-  mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
-});
-
-// ─── SCROLL TRACKING ───
-let scrollY = 0;
-window.addEventListener('scroll', () => {
-  scrollY = window.scrollY;
-});
-
-// ─── ANIMATE ───
-let time = 0;
-
-function animate() {
-  requestAnimationFrame(animate);
-  time += 0.008;
-
-  // Smooth mouse follow
-  targetX += (mouseX - targetX) * 0.04;
-  targetY += (mouseY - targetY) * 0.04;
-
-  // Camera position reacts to mouse + scroll
-  const scrollFactor = scrollY * 0.002;
-  camera.position.x = targetX * 1.8;
-  camera.position.y = 2 - targetY * 0.8 - scrollFactor * 0.5;
-  camera.position.z = 14 - scrollFactor * 0.3;
-  camera.lookAt(targetX * 0.3, -scrollFactor * 0.1, 0);
-
-  // Rotate core
-  core.rotation.y += 0.008;
-  core.rotation.x += 0.004;
-  coreEdge.rotation.copy(core.rotation);
-
-  // Pulsing core light
-  cyanLight.intensity = 2.0 + Math.sin(time * 2.5) * 0.8;
-  cyanLight.position.x = Math.sin(time * 0.5) * 5;
-  cyanLight.position.z = Math.cos(time * 0.5) * 3 - 3;
-
-  // Float capsules
-  capsules.forEach((c, i) => {
-    c.position.y = c.userData.baseY + Math.sin(time + c.userData.phase) * 0.18;
-    c.rotation.y = Math.sin(time * 0.4 + c.userData.phase) * 0.12;
-  });
-
-  // Rotate rings
-  rings.forEach((r, i) => {
-    r.rotation.z += 0.002 * (i % 2 === 0 ? 1 : -1);
-    r.rotation.x = Math.PI / 2 + Math.sin(time * 0.3 + i) * 0.05;
-  });
-
-  // Drift particles
-  particles.rotation.y += 0.0003;
-  particles.rotation.x += 0.0001;
-
-  renderer.render(scene, camera);
-}
-
-animate();
-
-// ─── RESIZE ───
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
-
-// ─── SCROLL FADE-IN ───
-const fadeEls = document.querySelectorAll('.fade-in');
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('visible');
-    }
-  });
-}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
-
-fadeEls.forEach(el => observer.observe(el));
-</script>
+<script type="module" src="./assets/js/site.js"></script>
 </body>
 </html>
