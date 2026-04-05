@@ -361,16 +361,16 @@
           <input type="hidden" name="_replyto" value="" />
           <input type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" hidden />
           <div class="form-field">
-            <label class="form-label">Identifier</label>
-            <input class="form-input" type="text" name="name" placeholder="Your name or handle" />
+            <label class="form-label" for="contact-name">Identifier</label>
+            <input class="form-input" id="contact-name" type="text" name="name" placeholder="Your name or handle" />
           </div>
           <div class="form-field">
-            <label class="form-label">Return Channel</label>
-            <input class="form-input" type="email" name="email" required placeholder="your@email.com" />
+            <label class="form-label" for="contact-email">Return Channel</label>
+            <input class="form-input" id="contact-email" type="email" name="email" required placeholder="your@email.com" />
           </div>
           <div class="form-field">
-            <label class="form-label">Message</label>
-            <textarea class="form-input" name="message" required rows="5" placeholder="Describe your request..."></textarea>
+            <label class="form-label" for="contact-message">Message</label>
+            <textarea class="form-input" id="contact-message" name="message" required rows="5" placeholder="Describe your request..."></textarea>
           </div>
           <button type="submit" class="btn-primary contact-submit">Transmit</button>
           <p class="form-status" data-form-status aria-live="polite"></p>
