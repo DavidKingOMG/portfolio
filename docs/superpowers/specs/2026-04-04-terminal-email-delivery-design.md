@@ -29,9 +29,9 @@ The user explicitly wants:
 
 ## Recommended Approach
 
-Use a third-party static form endpoint, with FormSubmit as the default target.
+Use a third-party static form endpoint, with FormSubmit as the fixed target.
 
-This approach keeps the site deployment simple while making the form actually useful. The form will post directly to the provider, and the provider will send inquiry emails to the configured inbox.
+This approach keeps the site deployment simple while making the form actually useful. The form will submit to FormSubmit, and FormSubmit will send inquiry emails to the configured inbox.
 
 ## Alternatives Considered
 
@@ -89,7 +89,7 @@ Behavior:
 
 - user fills in identifier, return channel, and message
 - submit button enters a sending state
-- the form posts to the third-party endpoint
+- JavaScript intercepts the submit and sends the form data to the FormSubmit endpoint in place
 - success displays an in-page confirmation message
 - failure displays a clear retry message without navigating away from the site
 
@@ -102,8 +102,9 @@ The implementation should stay inside the current static site structure.
 Expected implementation boundaries:
 
 - update the existing terminal form in `index.html`
-- add any required hidden fields for the provider
-- wire submit handling in `assets/js/site.js`
+- set the form endpoint to the FormSubmit target for `davidmoya1309@gmail.com` using the AJAX-friendly submission flow
+- add the provider hidden fields needed for email-only delivery and honeypot-based anti-spam protection
+- wire JavaScript-intercepted submit handling in `assets/js/site.js`
 - add minimal styling support in `assets/css/site.css` only if needed for form states or inline messaging
 
 No new backend code should be introduced.
@@ -111,9 +112,37 @@ No new backend code should be introduced.
 ## Operational Notes
 
 - the provider endpoint will be public in the client-side form
+- the implementation should use JavaScript `fetch` submission to the exact FormSubmit endpoint pattern `https://formsubmit.co/ajax/davidmoya1309@gmail.com` so the page can stay in place and show inline success or error states
+- the implementation should treat a successful JSON response from the provider as success and a non-2xx or error response as failure
+- the form should include FormSubmit hidden fields for subject and reply routing, and should explicitly disable CAPTCHA in favor of a hidden honeypot field
 - the destination inbox may require one-time activation through a provider confirmation email
-- spam protection will be basic unless the provider offers additional hidden-field or CAPTCHA support
+- spam protection will use a hidden honeypot field as the chosen anti-spam strategy for this phase
 - this phase is email-only and does not include message storage or a dashboard
+
+## Field Mapping
+
+The terminal form should map fields explicitly as follows:
+
+- visible input `name="name"`: sender name or handle for display in the email body
+- visible input `name="email"`: required return email and the sender reply-to address
+- visible textarea `name="message"`: required inquiry body
+- hidden input `name="_subject"`: fixed email subject such as `Portfolio Terminal Inquiry`
+- hidden input `name="_replyto"`: populated from the required return email field before submission
+- hidden input `name="_captcha"`: fixed to `false`
+- hidden honeypot input `name="_honey"`: left empty by normal users and used to reject bot-style submissions
+
+Expected email metadata:
+
+- subject should identify the site inquiry clearly, such as `Portfolio Terminal Inquiry`
+- reply-to should be set from the required `Return Channel` email
+- email body should include the identifier, return email, and message content in a readable order
+
+Validation expectations:
+
+- `Return Channel` must be a required valid email
+- `Message` must be required
+- `Identifier` may remain optional unless implementation needs it required for cleaner email formatting
+- the honeypot field must remain visually hidden and should stay empty for normal human submissions
 
 ## Risks
 
