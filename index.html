@@ -355,20 +355,25 @@
             </a>
           </div>
         </div>
-        <form class="contact-form" onsubmit="return false;">
+        <form class="contact-form" data-terminal-form>
+          <input type="hidden" name="_subject" value="Portfolio Terminal Inquiry" />
+          <input type="hidden" name="_captcha" value="false" />
+          <input type="hidden" name="_replyto" value="" />
+          <input type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" hidden />
           <div class="form-field">
             <label class="form-label">Identifier</label>
-            <input class="form-input" type="text" placeholder="Your name or handle" />
+            <input class="form-input" type="text" name="name" placeholder="Your name or handle" />
           </div>
           <div class="form-field">
             <label class="form-label">Return Channel</label>
-            <input class="form-input" type="email" placeholder="your@email.com" />
+            <input class="form-input" type="email" name="email" required placeholder="your@email.com" />
           </div>
           <div class="form-field">
             <label class="form-label">Message</label>
-            <textarea class="form-input" rows="5" placeholder="Describe your request..."></textarea>
+            <textarea class="form-input" name="message" required rows="5" placeholder="Describe your request..."></textarea>
           </div>
           <button type="submit" class="btn-primary contact-submit">Transmit</button>
+          <p class="form-status" data-form-status aria-live="polite"></p>
         </form>
       </div>
     </div>
