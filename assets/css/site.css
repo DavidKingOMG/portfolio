@@ -814,7 +814,31 @@
     gap: 16px;
   }
 
+  .contact-form input[name="_honey"] {
+    display: block;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+  }
+
   .contact-submit { align-self: flex-start; }
+
+  .contact-submit:disabled {
+    color: var(--silver);
+    border-color: rgba(0,212,255,0.12);
+    opacity: 0.55;
+    cursor: wait;
+    pointer-events: none;
+  }
 
   .form-field {
     display: flex;
@@ -848,6 +872,32 @@
   }
 
   .form-input::placeholder { color: rgba(192,200,216,0.25); }
+
+  .form-status {
+    min-height: 1.5em;
+    margin-top: 2px;
+    font-size: 9px;
+    line-height: 1.5;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--silver);
+    opacity: 0.45;
+  }
+
+  .form-status[data-state="sending"] {
+    color: var(--cyan);
+    opacity: 0.55;
+  }
+
+  .form-status[data-state="success"] {
+    color: var(--cyan);
+    opacity: 0.75;
+  }
+
+  .form-status[data-state="error"] {
+    color: #ff8a8a;
+    opacity: 0.7;
+  }
 
   /* --- FOOTER --- */
   footer {
