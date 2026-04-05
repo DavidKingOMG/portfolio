@@ -565,7 +565,7 @@ function setupTerminalForm() {
 
 // Scene structure checklist:
 // - keep environment setup isolated from animated objects
-// - keep pillars, capsules, the energy core, and panels independent
+// - keep pillars, core, rings, capsules, particles, and panels independent
 // - keep camera motion driven only by scroll and pointer state
 // - keep the animation loop as a thin orchestrator
 
@@ -687,8 +687,70 @@ function createVaultPillars(scene) {
   });
 }
 
-const CORE_PARTICLE_COUNT = 1800;
-const CORE_RADIUS = 1.7;
+function createVaultRings(scene) {
+  const rings = [];
+
+  for (let index = 0; index < 3; index += 1) {
+    const ringGeo = new THREE.TorusGeometry(2.5 + index * 1.2, 0.02, 8, 80);
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: index === 0 ? 0x00d4ff : index === 1 ? 0x0055cc : 0x334466,
+      transparent: true,
+      opacity: 0.25 - index * 0.06
+    });
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.rotation.x = Math.PI / 2;
+    ring.position.set(0, -0.5 + index * 0.5, -6);
+    scene.add(ring);
+    rings.push(ring);
+  }
+
+  return rings;
+}
+
+function createVaultParticles(scene) {
+  const particlesGeo = new THREE.BufferGeometry();
+  const particleCount = 2200;
+  const positions = new Float32Array(particleCount * 3);
+  const particleColors = new Float32Array(particleCount * 3);
+
+  for (let index = 0; index < particleCount; index += 1) {
+    const offset = index * 3;
+    positions[offset] = (Math.random() - 0.5) * 60;
+    positions[offset + 1] = (Math.random() - 0.5) * 30;
+    positions[offset + 2] = (Math.random() - 0.5) * 60;
+
+    const tint = Math.random();
+    if (tint < 0.6) {
+      particleColors[offset] = 0.0;
+      particleColors[offset + 1] = 0.75;
+      particleColors[offset + 2] = 1.0;
+    } else if (tint < 0.85) {
+      particleColors[offset] = 0.1;
+      particleColors[offset + 1] = 0.3;
+      particleColors[offset + 2] = 0.85;
+    } else {
+      particleColors[offset] = 0.7;
+      particleColors[offset + 1] = 0.75;
+      particleColors[offset + 2] = 0.85;
+    }
+  }
+
+  particlesGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  particlesGeo.setAttribute('color', new THREE.BufferAttribute(particleColors, 3));
+
+  const particlesMat = new THREE.PointsMaterial({
+    size: 0.06,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.55,
+    sizeAttenuation: true
+  });
+
+  const particles = new THREE.Points(particlesGeo, particlesMat);
+  scene.add(particles);
+
+  return particles;
+}
 
 function createVaultCapsules(scene) {
   const capsules = [];
@@ -727,100 +789,26 @@ function createVaultCapsules(scene) {
   return capsules;
 }
 
-function createControlledEnergyCore(scene) {
-  const coreGeometry = new THREE.BufferGeometry();
-  const positions = new Float32Array(CORE_PARTICLE_COUNT * 3);
-  const colors = new Float32Array(CORE_PARTICLE_COUNT * 3);
-  const basePositions = new Float32Array(CORE_PARTICLE_COUNT * 3);
-  const tangentA = new Float32Array(CORE_PARTICLE_COUNT * 3);
-  const tangentB = new Float32Array(CORE_PARTICLE_COUNT * 3);
-  const orbitOffsets = new Float32Array(CORE_PARTICLE_COUNT);
-  const orbitAmplitudes = new Float32Array(CORE_PARTICLE_COUNT);
-  const pulseOffsets = new Float32Array(CORE_PARTICLE_COUNT);
-
-  for (let index = 0; index < CORE_PARTICLE_COUNT; index += 1) {
-    const offset = index * 3;
-    const theta = Math.random() * Math.PI * 2;
-    const phi = Math.acos(THREE.MathUtils.randFloatSpread(2));
-    const radialBias = Math.pow(Math.random(), 0.72);
-    const radius = THREE.MathUtils.lerp(CORE_RADIUS * 0.18, CORE_RADIUS, radialBias);
-    const sinPhi = Math.sin(phi);
-    const x = Math.cos(theta) * sinPhi;
-    const y = Math.cos(phi);
-    const z = Math.sin(theta) * sinPhi;
-    const tangentReferenceX = Math.abs(y) > 0.82 ? 1 : 0;
-    const tangentReferenceY = Math.abs(y) > 0.82 ? 0 : 1;
-    const tangentOneX = tangentReferenceY * z - 0 * y;
-    const tangentOneY = 0 * x - tangentReferenceX * z;
-    const tangentOneZ = tangentReferenceX * y - tangentReferenceY * x;
-    const tangentOneLength = Math.hypot(tangentOneX, tangentOneY, tangentOneZ) || 1;
-    const normalizedTangentOneX = tangentOneX / tangentOneLength;
-    const normalizedTangentOneY = tangentOneY / tangentOneLength;
-    const normalizedTangentOneZ = tangentOneZ / tangentOneLength;
-    const tangentTwoX = y * normalizedTangentOneZ - z * normalizedTangentOneY;
-    const tangentTwoY = z * normalizedTangentOneX - x * normalizedTangentOneZ;
-    const tangentTwoZ = x * normalizedTangentOneY - y * normalizedTangentOneX;
-
-    basePositions[offset] = x * radius;
-    basePositions[offset + 1] = y * radius;
-    basePositions[offset + 2] = z * radius;
-
-    positions[offset] = basePositions[offset];
-    positions[offset + 1] = basePositions[offset + 1];
-    positions[offset + 2] = basePositions[offset + 2];
-
-    tangentA[offset] = normalizedTangentOneX;
-    tangentA[offset + 1] = normalizedTangentOneY;
-    tangentA[offset + 2] = normalizedTangentOneZ;
-    tangentB[offset] = tangentTwoX;
-    tangentB[offset + 1] = tangentTwoY;
-    tangentB[offset + 2] = tangentTwoZ;
-
-    orbitOffsets[index] = Math.random() * Math.PI * 2;
-    orbitAmplitudes[index] = THREE.MathUtils.lerp(0.015, 0.075, Math.random());
-    pulseOffsets[index] = Math.random() * Math.PI * 2;
-
-    const tintMix = Math.random();
-    const color = new THREE.Color().setRGB(
-      THREE.MathUtils.lerp(0.08, 0.62, tintMix),
-      THREE.MathUtils.lerp(0.75, 0.95, 1 - tintMix * 0.55),
-      1
-    );
-
-    colors[offset] = color.r;
-    colors[offset + 1] = color.g;
-    colors[offset + 2] = color.b;
-  }
-
-  coreGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  coreGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-
-  const coreMaterial = new THREE.PointsMaterial({
-    size: 0.06,
-    vertexColors: true,
-    transparent: true,
-    opacity: 0.7,
-    sizeAttenuation: true,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending
+function createEnergyCore(scene) {
+  const coreGeo = new THREE.OctahedronGeometry(0.9, 2);
+  const coreMat = new THREE.MeshStandardMaterial({
+    color: 0x001428,
+    metalness: 1.0,
+    roughness: 0.05,
+    emissive: 0x003366,
+    emissiveIntensity: 0.3
   });
-
-  const core = new THREE.Points(coreGeometry, coreMaterial);
+  const core = new THREE.Mesh(coreGeo, coreMat);
   core.position.set(0, 1.5, -6);
   scene.add(core);
 
-  return {
-    core,
-    coreGeometry,
-    coreMaterial,
-    positions,
-    basePositions,
-    tangentA,
-    tangentB,
-    orbitOffsets,
-    orbitAmplitudes,
-    pulseOffsets
-  };
+  const coreEdgeGeo = new THREE.EdgesGeometry(coreGeo);
+  const coreEdgeMat = new THREE.LineBasicMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.8 });
+  const coreEdge = new THREE.LineSegments(coreEdgeGeo, coreEdgeMat);
+  coreEdge.position.copy(core.position);
+  scene.add(coreEdge);
+
+  return { core, coreEdge };
 }
 
 function createVaultPanels(scene) {
@@ -899,41 +887,26 @@ function updateSceneAnimation(state, runtime, deltaSeconds) {
 
   updateCameraFromScroll(runtime.camera, state, deltaSeconds);
 
-  const corePulse = 1 + Math.sin(state.time * 1.6) * 0.035;
-  const corePositionAttr = runtime.coreGeometry.attributes.position;
+  runtime.core.rotation.y += 0.008;
+  runtime.core.rotation.x += 0.004;
+  runtime.coreEdge.rotation.copy(runtime.core.rotation);
 
-  for (let index = 0; index < CORE_PARTICLE_COUNT; index += 1) {
-    const offset = index * 3;
-    const orbitAngle = state.time * 0.45 + runtime.orbitOffsets[index];
-    const orbitRadius = runtime.orbitAmplitudes[index];
-    const orbitX = runtime.tangentA[offset] * Math.cos(orbitAngle) * orbitRadius;
-    const orbitY = runtime.tangentA[offset + 1] * Math.cos(orbitAngle) * orbitRadius;
-    const orbitZ = runtime.tangentA[offset + 2] * Math.cos(orbitAngle) * orbitRadius;
-    const driftAngle = orbitAngle * 1.17 + runtime.pulseOffsets[index];
-    const driftX = runtime.tangentB[offset] * Math.sin(driftAngle) * orbitRadius * 0.55;
-    const driftY = runtime.tangentB[offset + 1] * Math.sin(driftAngle) * orbitRadius * 0.55;
-    const driftZ = runtime.tangentB[offset + 2] * Math.sin(driftAngle) * orbitRadius * 0.55;
-    const particlePulse = 1 + Math.sin(state.time * 1.1 + runtime.pulseOffsets[index]) * 0.018;
-    const radiusScale = corePulse * particlePulse;
-
-    runtime.positions[offset] = runtime.basePositions[offset] * radiusScale + orbitX + driftX;
-    runtime.positions[offset + 1] = runtime.basePositions[offset + 1] * radiusScale + orbitY + driftY;
-    runtime.positions[offset + 2] = runtime.basePositions[offset + 2] * radiusScale + orbitZ + driftZ;
-  }
-
-  corePositionAttr.needsUpdate = true;
-
-  runtime.core.rotation.y += 0.108 * deltaSeconds;
-  runtime.coreMaterial.opacity = 0.68 + Math.sin(state.time * 1.4) * 0.04;
-
-  runtime.cyanLight.intensity = 2.15 + Math.sin(state.time * 1.4) * 0.18;
-  runtime.cyanLight.position.x = -3.5 + Math.sin(state.time * 0.4) * 0.5;
-  runtime.cyanLight.position.z = -1.1 + Math.cos(state.time * 0.4) * 0.45;
+  runtime.cyanLight.intensity = 2.0 + Math.sin(state.time * 2.5) * 0.8;
+  runtime.cyanLight.position.x = Math.sin(state.time * 0.5) * 5;
+  runtime.cyanLight.position.z = Math.cos(state.time * 0.5) * 3 - 3;
 
   runtime.capsules.forEach((capsule) => {
     capsule.position.y = capsule.userData.baseY + Math.sin(state.time + capsule.userData.phase) * 0.18;
     capsule.rotation.y = Math.sin(state.time * 0.4 + capsule.userData.phase) * 0.12;
   });
+
+  runtime.rings.forEach((ring, index) => {
+    ring.rotation.z += 0.002 * (index % 2 === 0 ? 1 : -1);
+    ring.rotation.x = Math.PI / 2 + Math.sin(state.time * 0.3 + index) * 0.05;
+  });
+
+  runtime.particles.rotation.y += 0.0003;
+  runtime.particles.rotation.x += 0.0001;
 }
 
 function setupScene() {
@@ -948,8 +921,10 @@ function setupScene() {
   const camera = createSceneCamera();
   const { cyanLight } = createSceneEnvironment(scene);
   createVaultPillars(scene);
+  const rings = createVaultRings(scene);
+  const particles = createVaultParticles(scene);
   const capsules = createVaultCapsules(scene);
-  const energyCore = createControlledEnergyCore(scene);
+  const { core, coreEdge } = createEnergyCore(scene);
   createVaultPanels(scene);
 
   const state = {
@@ -976,8 +951,11 @@ function setupScene() {
   const runtime = {
     camera,
     cyanLight,
+    core,
+    coreEdge,
     capsules,
-    ...energyCore
+    rings,
+    particles
   };
 
   let lastFrameTime = performance.now();
