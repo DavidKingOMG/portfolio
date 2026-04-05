@@ -467,6 +467,102 @@ function setupFadeInObserver() {
   fadeEls.forEach((element) => observer.observe(element));
 }
 
+function setupTerminalForm() {
+  const form = document.querySelector('[data-terminal-form]');
+
+  if (!(form instanceof HTMLFormElement)) {
+    return;
+  }
+
+  const emailInput = form.querySelector('input[name="email"]');
+  const replyToInput = form.querySelector('input[name="_replyto"]');
+  const honeypotInput = form.querySelector('input[name="_honey"]');
+  const submitButton = form.querySelector('button[type="submit"]');
+  const status = form.querySelector('[data-form-status]');
+
+  if (
+    !(emailInput instanceof HTMLInputElement) ||
+    !(replyToInput instanceof HTMLInputElement) ||
+    !(submitButton instanceof HTMLButtonElement) ||
+    !(status instanceof HTMLElement)
+  ) {
+    return;
+  }
+
+  const defaultButtonLabel = submitButton.textContent?.trim() || 'Transmit';
+  let isSubmitting = false;
+
+  function syncReplyTo() {
+    replyToInput.value = emailInput.value.trim();
+  }
+
+  function setStatusMessage(message, state) {
+    status.textContent = message;
+    status.dataset.state = state;
+  }
+
+  function resetButtonState() {
+    submitButton.disabled = false;
+    submitButton.removeAttribute('aria-busy');
+    submitButton.textContent = defaultButtonLabel;
+  }
+
+  emailInput.addEventListener('input', syncReplyTo);
+  syncReplyTo();
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    if (isSubmitting) {
+      return;
+    }
+
+    syncReplyTo();
+
+    if (honeypotInput instanceof HTMLInputElement && honeypotInput.value.trim() !== '') {
+      setStatusMessage('Transmission blocked. Please refresh and try again.', 'error');
+      resetButtonState();
+      return;
+    }
+
+    isSubmitting = true;
+    submitButton.disabled = true;
+    submitButton.setAttribute('aria-busy', 'true');
+    submitButton.textContent = 'Transmitting...';
+    setStatusMessage('Sending inquiry...', 'sending');
+
+    try {
+      const response = await fetch('https://formsubmit.co/ajax/davidmoya1309@gmail.com', {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json'
+        },
+        body: new FormData(form)
+      });
+      const payload = await response.json().catch(() => null);
+
+      if (!response.ok || payload?.success === 'false' || payload?.success === false) {
+        throw new Error(payload?.message || 'Transmission failed.');
+      }
+
+      form.reset();
+      syncReplyTo();
+      setStatusMessage('Inquiry transmitted. Expect a response within 24-48 hours.', 'success');
+      submitButton.removeAttribute('aria-busy');
+      submitButton.disabled = false;
+      submitButton.textContent = defaultButtonLabel;
+    } catch (error) {
+      setStatusMessage(
+        error instanceof Error && error.message ? error.message : 'Transmission failed. Please try again.',
+        'error'
+      );
+      resetButtonState();
+    } finally {
+      isSubmitting = false;
+    }
+  });
+}
+
 // Scene structure checklist:
 // - keep environment setup isolated from animated objects
 // - keep pillars, capsules, the energy core, and panels independent
@@ -907,4 +1003,5 @@ function setupScene() {
 renderProfile();
 animateVaultEyebrow();
 setupFadeInObserver();
+setupTerminalForm();
 setupScene();
