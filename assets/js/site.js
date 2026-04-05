@@ -584,17 +584,6 @@ const CAMERA_EASING = {
   pointer: 2.4
 };
 
-const PILLAR_SPEC = {
-  width: 1.35,
-  height: 22,
-  depth: 1.35,
-  stripWidth: 0.14,
-  stripHeight: 16
-};
-
-const PILLAR_BASE_Y = -3;
-const PILLAR_STRIP_GAP = 0.06;
-
 function createSceneRenderer(canvas) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -664,25 +653,21 @@ function createVaultPillars(scene) {
   });
 
   const pillarPositions = [
-    [-7.25, 0, -8.25], [7.25, 0, -8.25],
-    [-10.5, 0, -2.1], [10.5, 0, -2.1],
-    [-5.75, 0, -14.25], [5.75, 0, -14.25]
+    [-7, 0, -8], [7, 0, -8],
+    [-10, 0, -2], [10, 0, -2],
+    [-5, 0, -14], [5, 0, -14]
   ];
 
   pillarPositions.forEach(([x, y, z]) => {
-    const geo = new THREE.BoxGeometry(PILLAR_SPEC.width, PILLAR_SPEC.height, PILLAR_SPEC.depth);
+    const geo = new THREE.BoxGeometry(0.6, 12, 0.6);
     const pillar = new THREE.Mesh(geo, pillarMat);
-    pillar.position.set(x, PILLAR_BASE_Y + PILLAR_SPEC.height / 2, z);
+    pillar.position.set(x, y, z);
     scene.add(pillar);
 
-    const stripGeo = new THREE.BoxGeometry(PILLAR_SPEC.stripWidth, PILLAR_SPEC.stripHeight, PILLAR_SPEC.stripWidth);
+    const stripGeo = new THREE.BoxGeometry(0.08, 8, 0.08);
     const stripMat = new THREE.MeshBasicMaterial({ color: 0x00d4ff });
     const strip = new THREE.Mesh(stripGeo, stripMat);
-    strip.position.set(
-      x + (PILLAR_SPEC.width / 2) + (PILLAR_SPEC.stripWidth / 2) + PILLAR_STRIP_GAP,
-      PILLAR_BASE_Y + PILLAR_SPEC.stripHeight / 2,
-      z + (PILLAR_SPEC.depth / 2) - (PILLAR_SPEC.stripWidth / 2)
-    );
+    strip.position.set(x + 0.25, y, z + 0.25);
     scene.add(strip);
   });
 }
