@@ -27,6 +27,17 @@ If you want to update the portfolio copy, links, sections, or personal details, 
    npm run preview
    ```
 
+## Contact Form Activation
+
+The contact form posts to FormSubmit. On the first real submission for a new site URL, FormSubmit may pause delivery and send an activation email to `davidmoya1309@gmail.com`.
+
+If the page shows an activation-required message:
+
+1. Open the inbox for `davidmoya1309@gmail.com`.
+2. Find the message from `FormSubmit <submissions@formsubmit.co>`.
+3. Click the `Activate Form` link in that email.
+4. Retry the submission from the same site URL and confirm it arrives.
+
 ## Publish to GitHub Pages
 
 This repo includes a GitHub Actions workflow that builds the site and deploys it to GitHub Pages automatically.
