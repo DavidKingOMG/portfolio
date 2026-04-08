@@ -32,11 +32,11 @@ export const profile = {
   projects: [
     {
       id: "001",
-      title: "Cinematic Discovery Platform",
+      title: "Flow",
       description:
-        "A movie discovery experience built around TMDB data with fast search, smart filtering, watchlists, recommendation flows, sentiment-tagged reviews, trailer overlays, and a polished animated interface.",
-      tags: ["React", "TMDB API", "Search", "State Management", "UI/UX"],
-      href: "",
+        "A secure, admin-first business dashboard for multi-client operations with role-based access, invoice and recurring billing workflows, payment tracking, and a premium dark dashboard interface.",
+      tags: ["Next.js", "TypeScript", "Prisma", "Stripe", "Dashboard"],
+      href: "https://flow-beta-bice.vercel.app/",
       featured: true
     },
     {
