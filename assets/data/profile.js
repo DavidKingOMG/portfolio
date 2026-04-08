@@ -34,8 +34,8 @@ export const profile = {
       id: "001",
       title: "Flow",
       description:
-        "A secure, admin-first business dashboard for multi-client operations with role-based access, invoice and recurring billing workflows, payment tracking, and a premium dark dashboard interface.",
-      tags: ["Next.js", "TypeScript", "Prisma", "NextAuth", "Stripe"],
+        "A secure business platform for multi-client operations with role-based access, invoicing and recurring billing, payment tracking, and a polished dashboard built for day-to-day admin work.",
+      tags: ["Next.js", "TypeScript", "Prisma", "NextAuth", "Stripe", "Supabase"],
       href: "https://flow-beta-bice.vercel.app/",
       featured: true
     },
@@ -77,10 +77,10 @@ export const profile = {
     },
     {
       id: "006",
-      title: "Freelancer Invoice Toolkit",
+      title: "Cinematic Discovery Platform",
       description:
-        "A business-ready invoicing application with PDF export, recurring billing, tax settings, payment tracking, analytics, and lightweight client management for freelancers and small teams.",
-      tags: ["Vue 3", "Vuex", "Firebase", "PDF Export", "Business Tools"],
+        "A TMDB-powered cinematic discovery platform with fast search, layered filtering, animated browsing interactions, and a polished interface for exploring movies and shows.",
+      tags: ["React", "TMDB API", "Search", "Filtering", "Responsive UI"],
       href: "",
       featured: false
     }
@@ -88,20 +88,28 @@ export const profile = {
 
   skills: [
     {
-      category: "Software",
-      items: ["JavaScript", "TypeScript", "Problem Solving", "Application Architecture"]
+      category: "Foundations",
+      items: ["JavaScript", "TypeScript", "Python", "Problem Solving"]
     },
     {
-      category: "Systems",
+      category: "Data & Auth",
       items: ["Prisma", "PostgreSQL (Supabase)", "Database Management", "Authentication Flows"]
     },
     {
       category: "Web",
-      items: ["Next.js", "React", "Tailwind CSS", "Business Websites"]
+      items: ["Next.js", "React", "Tailwind CSS", "Responsive UI"]
     },
     {
       category: "Operations",
-      items: ["Stripe Integrations", "Playwright", "Vitest", "Day-to-Day Execution"]
+      items: ["Stripe Integrations", "Email Setup", "Workflow Improvement", "Technical Troubleshooting"]
+    },
+    {
+      category: "Support",
+      items: ["Cloud File Management", "Printer & Network Systems"]
+    },
+    {
+      category: "Testing",
+      items: ["Playwright", "Vitest"]
     }
   ],
 
