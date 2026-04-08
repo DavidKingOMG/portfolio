@@ -88,28 +88,28 @@ export const profile = {
 
   skills: [
     {
-      category: "Foundations",
-      items: ["JavaScript", "TypeScript", "Python", "Problem Solving"]
+      category: "Engineering",
+      items: ["Software Development", "Problem Solving", "Debugging", "Git", "GitHub", "Computer Science Fundamentals"]
     },
     {
-      category: "Data & Auth",
-      items: ["Prisma", "PostgreSQL (Supabase)", "Database Management", "Authentication Flows"]
+      category: "Languages",
+      items: ["JavaScript", "TypeScript", "Python", "Java", "C++", "PHP", "SQL"]
     },
     {
-      category: "Web",
-      items: ["Next.js", "React", "Tailwind CSS", "Responsive UI"]
+      category: "Frontend & UI",
+      items: ["HTML", "CSS", "UI Design", "Front-End Development", "Responsive UI", "JavaScript Frameworks"]
     },
     {
-      category: "Operations",
-      items: ["Stripe Integrations", "Email Setup", "Workflow Improvement", "Technical Troubleshooting"]
+      category: "Web & Platforms",
+      items: ["Web Development", "React", "Next.js", "WordPress", "Website Management", "Website Maintenance", ".NET"]
     },
     {
-      category: "Support",
-      items: ["Cloud File Management", "Printer & Network Systems"]
+      category: "Data & Systems",
+      items: ["Databases", "Data Management", "Prisma", "PostgreSQL (Supabase)", "Authentication Flows", "Analytics"]
     },
     {
-      category: "Testing",
-      items: ["Playwright", "Vitest"]
+      category: "Tools & Workflow",
+      items: ["Playwright", "Vitest", "Stripe Integrations", "AI", "Process Improvement", "Microsoft 365"]
     }
   ],
 
