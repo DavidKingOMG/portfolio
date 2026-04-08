@@ -35,7 +35,7 @@ export const profile = {
       title: "Flow",
       description:
         "A secure, admin-first business dashboard for multi-client operations with role-based access, invoice and recurring billing workflows, payment tracking, and a premium dark dashboard interface.",
-      tags: ["Next.js", "TypeScript", "Prisma", "Stripe", "Dashboard"],
+      tags: ["Next.js", "TypeScript", "Prisma", "NextAuth", "Stripe"],
       href: "https://flow-beta-bice.vercel.app/",
       featured: true
     },
@@ -89,19 +89,19 @@ export const profile = {
   skills: [
     {
       category: "Software",
-      items: ["JavaScript", "HTML / CSS", "Frontend Foundations", "Problem Solving"]
+      items: ["JavaScript", "TypeScript", "Problem Solving", "Application Architecture"]
     },
     {
       category: "Systems",
-      items: ["Systems Architecture", "Workflow Design", "Technical Troubleshooting", "IT Support"]
+      items: ["Prisma", "Authentication Flows", "Stripe Integrations", "Technical Troubleshooting"]
     },
     {
       category: "Web",
-      items: ["Business Websites", "Content Updates", "Usability Improvements", "Site Maintenance"]
+      items: ["Next.js", "React", "Tailwind CSS", "Business Websites"]
     },
     {
       category: "Operations",
-      items: ["Logistics Support", "Process Coordination", "Operator Workflow Support", "Day-to-Day Execution"]
+      items: ["Playwright", "Vitest", "Process Coordination", "Day-to-Day Execution"]
     }
   ],
 
