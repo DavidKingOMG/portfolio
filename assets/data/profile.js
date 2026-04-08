@@ -93,7 +93,7 @@ export const profile = {
     },
     {
       category: "Systems",
-      items: ["Prisma", "Authentication Flows", "Stripe Integrations", "Technical Troubleshooting"]
+      items: ["Prisma", "PostgreSQL (Supabase)", "Database Management", "Authentication Flows"]
     },
     {
       category: "Web",
@@ -101,7 +101,7 @@ export const profile = {
     },
     {
       category: "Operations",
-      items: ["Playwright", "Vitest", "Process Coordination", "Day-to-Day Execution"]
+      items: ["Stripe Integrations", "Playwright", "Vitest", "Day-to-Day Execution"]
     }
   ],
 
